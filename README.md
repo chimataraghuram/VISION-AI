@@ -8,7 +8,7 @@
 
 ## 🔴 Live Demo
 
-* [**Experience VisionAI Live Here**](https://vision-ai-seven-gamma.vercel.app/) *(Update this link if needed)*
+* [**Experience VisionAI Live Here**](https://visionai-app.vercel.app/)
 
 ---
 

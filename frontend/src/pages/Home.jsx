@@ -7,6 +7,7 @@ import RecommendationList from '../components/RecommendationList';
 import AILoader from '../components/AILoader';
 import DemoImages from '../components/DemoImages';
 import ErrorAlert from '../components/ErrorAlert';
+import WorkflowPanel from '../components/WorkflowPanel';
 import { analyzeImage } from '../services/api';
 import { useApp } from '../contexts/AppContext';
 
@@ -134,51 +135,68 @@ export default function Home() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="max-w-4xl mx-auto px-4 pt-2 pb-12 space-y-12"
+      className="max-w-7xl mx-auto px-6 pt-2 pb-16 space-y-16 relative"
     >
+      {/* Background glowing blobs */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-20 right-1/4 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
+
       {/* ── HERO SECTION ── */}
-      <section className="text-center space-y-5 pt-2 pb-2">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ type: 'spring', damping: 15 }}
-          className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-primary-50 border border-primary-100 text-primary-700 text-xs font-semibold rounded-full shadow-sm"
-        >
-          <Zap className="w-3.5 h-3.5 fill-primary-100" />
-          ⚡ Powered by Gemini 2.5 Flash
-        </motion.div>
-
-        <motion.h1
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ type: 'spring', stiffness: 80, delay: 0.1 }}
-          className="text-4xl sm:text-5xl font-black text-surface-900 tracking-tight leading-[1.1]"
-        >
-          AI-Powered Compliance Auditor
-        </motion.h1>
-
-        <motion.p
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ type: 'spring', stiffness: 80, delay: 0.2 }}
-          className="text-base sm:text-lg text-surface-500 max-w-2xl mx-auto leading-relaxed"
-        >
-          Analyze room environments using AI Vision, identify compliance gaps, generate intelligent action plans, and assess knowledge through voice-based interviews.
-        </motion.p>
-
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ type: 'spring', stiffness: 80, delay: 0.3 }}
-          className="flex justify-center gap-3 pt-1"
-        >
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="btn-primary px-6 py-3 rounded-xl shadow-lg shadow-primary-500/20 hover:scale-[1.02] active:scale-[0.98] transition-transform"
+      <section className="grid lg:grid-cols-12 gap-12 items-center pt-8 pb-4">
+        {/* Left: Text & CTA */}
+        <div className="lg:col-span-7 space-y-6 text-left">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: 'spring', damping: 15 }}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold rounded-full shadow-sm"
           >
-            🚀 Start AI Inspection
-          </button>
-        </motion.div>
+            ⚡ Powered by Gemini 2.5 Flash
+          </motion.div>
+
+          <motion.h1
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 80, delay: 0.1 }}
+            className="text-4xl sm:text-6xl font-black text-white tracking-tight leading-[1.05]"
+          >
+            <span className="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">AI-Powered</span> Compliance Auditor
+          </motion.h1>
+
+          <motion.p
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 80, delay: 0.2 }}
+            className="text-sm sm:text-base text-white/50 leading-relaxed"
+          >
+            Analyze room environments using AI Vision, identify compliance gaps, generate intelligent action plans, and assess knowledge through voice-based interviews.
+          </motion.p>
+
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 80, delay: 0.3 }}
+            className="flex flex-wrap gap-4 pt-1"
+          >
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="btn-primary px-6 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-450 border border-blue-400/20 text-white font-bold shadow-lg shadow-blue-500/20 hover:scale-[1.02] active:scale-[0.98] transition-transform"
+            >
+              ✨ Start AI Inspection
+            </button>
+            <a
+              href="#analyze-btn"
+              className="btn-secondary px-6 py-3.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white font-bold transition-all"
+            >
+              ▶ Learn More
+            </a>
+          </motion.div>
+        </div>
+
+        {/* Right: Live workflow panel */}
+        <div className="lg:col-span-5">
+          <WorkflowPanel />
+        </div>
       </section>
 
       {/* ── UPLOAD SECTION ── */}

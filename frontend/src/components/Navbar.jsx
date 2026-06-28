@@ -1,17 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldCheck, LayoutDashboard, History, Mic, Search, Sun, Moon } from 'lucide-react';
-
-const navLinks = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/history',   label: 'History',   icon: History },
-  { to: '/interview', label: 'Interview',  icon: Mic },
-];
+import { ShieldCheck, Eye, Mic, Sun, Moon } from 'lucide-react';
 
 export default function Navbar() {
   const { pathname } = useLocation();
   const [scrolled, setScrolled] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true); // Default to Dark Mode as requested
 
   useEffect(() => {
     const handleScroll = () => {
@@ -24,69 +19,109 @@ export default function Navbar() {
   return (
     <div className="w-full flex justify-center sticky top-4 z-50 px-4">
       <motion.nav
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: 'spring', stiffness: 100, damping: 15 }}
-        className={`w-full max-w-7xl rounded-2xl border transition-all duration-300 flex items-center justify-between px-6 ${
-          scrolled
-            ? 'bg-white/80 backdrop-blur-lg border-surface-200/80 shadow-lg py-3'
-            : 'bg-white/50 backdrop-blur-md border-surface-200/40 shadow-sm py-4'
-        }`}
+        animate={{
+          height: scrolled ? 64 : 90,
+          paddingTop: scrolled ? 8 : 24,
+          paddingBottom: scrolled ? 8 : 24,
+          backgroundColor: scrolled ? 'rgba(5, 8, 22, 0.95)' : 'rgba(5, 8, 22, 0.75)'
+        }}
+        transition={{ type: 'spring', stiffness: 120, damping: 20 }}
+        className="w-full max-w-5xl rounded-[28px] border border-white/[0.08] backdrop-blur-xl shadow-[0_0_30px_rgba(37,99,235,0.08)] flex items-center justify-between px-6"
       >
-        {/* Logo */}
+        {/* LEFT: Logo Shield */}
         <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 bg-gradient-to-tr from-primary-600 to-primary-400 rounded-xl flex items-center justify-center shadow-md shadow-primary-500/20 group-hover:scale-105 transition-transform">
+          <div className="w-9 h-9 bg-gradient-to-tr from-blue-600 to-blue-400 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform duration-200">
             <ShieldCheck className="w-5 h-5 text-white" />
           </div>
-          <span className="text-lg font-bold text-surface-900 tracking-tight">
-            Vision<span className="text-primary-600 font-extrabold">AI</span>
+          <span className="text-lg font-black text-white tracking-tight">
+            Vision<span className="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">AI</span>
           </span>
         </Link>
 
-        {/* Navigation Links */}
-        <div className="flex items-center bg-surface-100/50 p-1.5 rounded-xl border border-surface-200/30">
-          {navLinks.map(({ to, label, icon: Icon }) => {
-            const isActive = pathname === to;
+        {/* CENTER: Capsule Navigation */}
+        <div className="flex items-center bg-white/[0.04] border border-white/[0.06] p-1 rounded-2xl">
+          {[
+            { to: '/', label: 'Inspection', icon: Eye },
+            { to: '/interview', label: 'Interview', icon: Mic }
+          ].map((item) => {
+            const isActive = pathname === item.to;
+            const Icon = item.icon;
+
             return (
               <Link
-                key={to}
-                to={to}
-                className="relative px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-200"
+                key={item.to}
+                to={item.to}
+                className="relative px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200"
               >
                 {isActive && (
                   <motion.div
-                    layoutId="activeNavBg"
-                    className="absolute inset-0 bg-white border border-surface-200 shadow-sm rounded-lg"
-                    transition={{ type: 'spring', stiffness: 120, damping: 18 }}
+                    layoutId="activeDarkNav"
+                    className="absolute inset-0 bg-white/[0.06] border border-white/[0.08] rounded-xl"
+                    transition={{ type: 'spring', stiffness: 150, damping: 18 }}
                   />
                 )}
-                <span className={`relative z-10 flex items-center gap-1.5 ${
-                  isActive ? 'text-primary-600 font-semibold' : 'text-surface-500 hover:text-surface-800'
+                
+                <span className={`relative z-10 flex items-center gap-1.5 transition-colors duration-150 ${
+                  isActive ? 'text-blue-400' : 'text-white/60 hover:text-white'
                 }`}>
                   <Icon className="w-4 h-4" />
-                  <span className="hidden sm:inline">{label}</span>
+                  
+                  {/* Label disappears when scrolled, only icons remain */}
+                  <AnimatePresence>
+                    {!scrolled && (
+                      <motion.span
+                        initial={{ opacity: 0, width: 0 }}
+                        animate={{ opacity: 1, width: 'auto' }}
+                        exit={{ opacity: 0, width: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        {item.label}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
                 </span>
+                
+                {/* Active Underline Glow */}
+                {isActive && (
+                  <motion.div
+                    layoutId="activeUnderline"
+                    className="absolute bottom-1 left-4 right-4 h-[2px] bg-blue-500 rounded-full shadow-[0_0_10px_#3b82f6]"
+                    transition={{ type: 'spring', stiffness: 150, damping: 18 }}
+                  />
+                )}
               </Link>
             );
           })}
         </div>
 
-        {/* Right side items */}
-        <div className="flex items-center gap-3">
-          {/* Mock Search report bar */}
-          <div className="hidden lg:flex items-center gap-2 bg-surface-50 border border-surface-200 px-3 py-1.5 rounded-xl text-surface-400 focus-within:border-primary-400 focus-within:ring-glow transition-all">
-            <Search className="w-3.5 h-3.5" />
-            <input
-              type="text"
-              placeholder="Search reports..."
-              className="bg-transparent border-0 outline-none text-xs text-surface-700 w-28"
-              disabled
-            />
-          </div>
-
-          {/* Profile Avatar indicator */}
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary-200 to-primary-100 border border-primary-200 flex items-center justify-center font-bold text-xs text-primary-700 shadow-sm">
-            AI
+        {/* RIGHT: iOS Switch Dark Mode Toggle */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Sun className={`w-3.5 h-3.5 ${isDarkMode ? 'text-white/30' : 'text-amber-400'}`} />
+            
+            {/* iOS Switch */}
+            <button
+              onClick={() => setIsDarkMode(!isDarkMode)}
+              className="w-10 h-6 bg-white/[0.08] rounded-full p-0.5 border border-white/[0.08] relative flex items-center cursor-pointer focus:outline-none"
+            >
+              <motion.div
+                layout
+                transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+                className="w-4.5 h-4.5 bg-blue-500 rounded-full shadow-md flex items-center justify-center"
+                style={{
+                  x: isDarkMode ? 16 : 0
+                }}
+              >
+                {isDarkMode ? (
+                  <Moon className="w-2.5 h-2.5 text-white" />
+                ) : (
+                  <Sun className="w-2.5 h-2.5 text-white" />
+                )}
+              </motion.div>
+            </button>
+            
+            <Moon className={`w-3.5 h-3.5 ${isDarkMode ? 'text-blue-400' : 'text-white/30'}`} />
           </div>
         </div>
       </motion.nav>

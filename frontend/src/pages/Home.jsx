@@ -275,12 +275,6 @@ export default function Home() {
           >
             ✨ Start AI Inspection
           </button>
-          <a
-            href="#analyze-btn"
-            className="btn-secondary px-6 py-3.5 rounded-2xl transition-all"
-          >
-            ▶ Learn More
-          </a>
         </motion.div>
       </section>
 

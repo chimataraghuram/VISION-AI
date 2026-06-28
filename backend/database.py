@@ -10,7 +10,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./visionai.db")
+# Vercel serverless is a read-only environment, except for /tmp
+if os.getenv("VERCEL"):
+    DATABASE_URL = "sqlite:////tmp/visionai.db"
+else:
+    DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./visionai.db")
 
 # SQLite requires check_same_thread=False for FastAPI async context
 engine = create_engine(

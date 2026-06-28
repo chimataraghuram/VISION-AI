@@ -2,9 +2,13 @@
 VisionAI FastAPI Application Entry Point
 """
 import os
+import sys
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+
+# Ensure the backend directory is in the Python search path for Vercel
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from database import engine, Base
 from routers import analyze, interview, history, dashboard

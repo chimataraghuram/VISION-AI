@@ -107,55 +107,15 @@ export default function Navbar() {
           })}
         </div>
 
-        {/* RIGHT: Switch / Icon-only Dark Mode Toggle */}
+        {/* RIGHT: Icon-only Dark Mode Toggle */}
         <div className="flex items-center">
-          <AnimatePresence mode="wait">
-            {scrolled ? (
-              <motion.button
-                key="collapsed"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                onClick={toggleTheme}
-                className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-blue-400 cursor-pointer focus:outline-none hover:bg-white/10 transition-colors"
-              >
-                {isDarkMode ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-              </motion.button>
-            ) : (
-              <motion.div
-                key="expanded"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="flex items-center gap-2 bg-white dark:bg-[#0b1220]/[0.02] border border-white/[0.04] p-1 rounded-full"
-              >
-                <Sun className={`w-3.5 h-3.5 ${isDarkMode ? 'text-white/30' : 'text-amber-400'}`} />
-                
-                {/* iOS Switch */}
-                <button
-                  onClick={toggleTheme}
-                  className="w-10 h-6 bg-white dark:bg-[#0b1220]/[0.08] rounded-full p-0.5 border border-white/[0.08] relative flex items-center cursor-pointer focus:outline-none"
-                >
-                  <motion.div
-                    layout
-                    transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-                    className="w-4.5 h-4.5 bg-blue-500 rounded-full shadow-md flex items-center justify-center"
-                    style={{
-                      x: isDarkMode ? 16 : 0
-                    }}
-                  >
-                    {isDarkMode ? (
-                      <Moon className="w-2.5 h-2.5 text-white" />
-                    ) : (
-                      <Sun className="w-2.5 h-2.5 text-white" />
-                    )}
-                  </motion.div>
-                </button>
-                
-                <Moon className={`w-3.5 h-3.5 ${isDarkMode ? 'text-blue-400' : 'text-white/30'}`} />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <button
+            onClick={toggleTheme}
+            className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-blue-400 cursor-pointer focus:outline-none hover:bg-white/10 transition-colors"
+            title="Toggle Theme"
+          >
+            {isDarkMode ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+          </button>
         </div>
       </motion.nav>
     </div>

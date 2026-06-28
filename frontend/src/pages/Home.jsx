@@ -176,9 +176,9 @@ export default function Home() {
       setStandard(selectedStandard);
 
       try {
-        const response = await fetch(`/IMAGES/${filename}`);
+        const response = await fetch(`/demo-images/${filename}`);
         if (!response.ok) {
-          throw new Error(`Demo image '/IMAGES/${filename}' could not be loaded.`);
+          throw new Error(`Demo image '/demo-images/${filename}' could not be loaded.`);
         }
         const blob = await response.blob();
         const file = new File([blob], filename, { type: 'image/jpeg' });
@@ -278,6 +278,13 @@ export default function Home() {
         </motion.div>
       </section>
 
+      {/* ── USER GUIDANCE ── */}
+      {!imageFile && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center text-sm font-medium text-surface-500 dark:text-white/50 bg-surface-100 dark:bg-white/5 p-4 rounded-xl max-w-3xl mx-auto border border-surface-200 dark:border-white/10">
+          💡 Don't have an image? Try one of our demo environments below to explore VisionAI instantly.
+        </motion.div>
+      )}
+
       {/* ── UPLOAD SECTION ── */}
       <section ref={uploadSectionRef} className="space-y-6">
         <motion.div
@@ -359,7 +366,6 @@ export default function Home() {
                       <p className="text-sm font-bold text-white drop-shadow-md">Drop to replace image</p>
                     </div>
                   )}
-                  {/* Subtle overlay on hover indicating click-to-replace */}
                   <div 
                     onClick={() => fileInputRef.current?.click()}
                     className="absolute inset-0 bg-black/0 hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 hover:opacity-100 cursor-pointer z-0"
@@ -442,7 +448,7 @@ export default function Home() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          <DemoImages onLoadDemo={loadDemoTemplate} />
+          <DemoImages onLoadDemo={loadDemoTemplate} activeDemo={imageFile?.name} isLoading={loading} />
         </motion.div>
       </section>
 

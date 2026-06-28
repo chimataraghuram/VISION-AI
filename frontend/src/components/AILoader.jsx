@@ -3,10 +3,10 @@ import { motion } from 'framer-motion';
 import { CheckCircle2, Shield, Eye, AlertTriangle, FileText, Mic } from 'lucide-react';
 
 const STEPS = [
-  { text: 'Detecting visual objects & context', icon: Eye },
-  { text: 'Checking workspace compliance regulations', icon: Shield },
-  { text: 'Evaluating safety risks & hazards', icon: AlertTriangle },
-  { text: 'Generating final compliance report', icon: FileText }
+  { text: 'Detecting Environment...', icon: Eye },
+  { text: 'Running Gemini Vision Analysis...', icon: Shield },
+  { text: 'Generating Compliance Report...', icon: FileText },
+  { text: 'Preparing Recommendations...', icon: CheckCircle2 }
 ];
 
 export default function AILoader() {

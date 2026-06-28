@@ -134,10 +134,10 @@ export default function Home() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="max-w-4xl mx-auto px-4 py-16 space-y-16"
+      className="max-w-4xl mx-auto px-4 pt-2 pb-12 space-y-12"
     >
       {/* ── HERO SECTION ── */}
-      <section className="text-center space-y-6 py-6">
+      <section className="text-center space-y-5 pt-2 pb-2">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -170,7 +170,7 @@ export default function Home() {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 80, delay: 0.3 }}
-          className="flex justify-center gap-3 pt-2"
+          className="flex justify-center gap-3 pt-1"
         >
           <button
             onClick={() => fileInputRef.current?.click()}
@@ -178,12 +178,6 @@ export default function Home() {
           >
             🚀 Start AI Inspection
           </button>
-          <a
-            href="#standards-info"
-            className="btn-secondary px-6 py-3 rounded-xl hover:bg-surface-100"
-          >
-            📖 Learn More
-          </a>
         </motion.div>
       </section>
 

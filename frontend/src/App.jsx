@@ -40,7 +40,7 @@ function Layout() {
     <div className="min-h-screen bg-surface-50 flex flex-col justify-between">
       <div>
         <Navbar />
-        <main className="py-8">
+        <main className="pt-2 pb-8">
           <Routes>
             <Route path="/"          element={<Home />} />
             <Route path="/dashboard" element={<Dashboard />} />

@@ -1,236 +1,309 @@
-# VisionAI — AI Compliance Auditor & Voice Assessment Platform
+# 🛡️ VisionAI
 
-> Upload a room photo → get instant AI-powered compliance scoring, issue detection, and action plans. Practice compliance knowledge with AI-generated voice interviews.
+### AI-Powered Compliance Auditor & Voice Assessment Platform
 
-**Built with:** Gemini 2.5 Flash · FastAPI · React + Vite · TailwindCSS · SQLite · Web Speech API
-
----
-
-## Features
-
-| Feature | Description |
-|---|---|
-| 📸 **Image Analysis** | Upload any room photo for instant compliance scoring |
-| 🤖 **Gemini Vision** | Real AI analysis via Gemini 2.5 Flash |
-| 📊 **Compliance Score** | 0-100 score with circular progress visualization |
-| ⚠️ **Issue Detection** | AI identifies specific compliance violations |
-| ✅ **Action Plan** | Tailored recommendations to fix each issue |
-| 🎙️ **Voice Interview** | 5-question AI interview with speech-to-text |
-| 📈 **Dashboard** | Stats, trends, and recent reports |
-| 📜 **History** | Browse and review all past assessments |
+> **VisionAI** is an AI-powered compliance auditing platform that analyzes uploaded room images using **Google Gemini 2.5 Flash**, generates intelligent compliance reports, identifies safety gaps, recommends corrective actions, conducts AI-powered voice interviews, and visualizes historical compliance data through an interactive dashboard.
 
 ---
 
-## Tech Stack
+## 🚀 Project Overview
 
-```
-Frontend  → React 18 + Vite + TailwindCSS + Recharts + Axios
-Backend   → FastAPI + SQLAlchemy + SQLite + Pillow
-AI        → Google Gemini 2.5 Flash (Vision + Text)
-Speech    → Web Speech API (browser-native)
-Deploy    → Vercel (frontend) + Render (backend)
+VisionAI was developed as a technical assessment to demonstrate end-to-end AI application development using modern Full Stack technologies and Generative AI.
+
+The application enables users to upload images of real-world environments such as offices, kitchens, laboratories, classrooms, warehouses, and hostels. Using AI vision capabilities, VisionAI evaluates compliance against selected standards, provides actionable recommendations, and assesses users' understanding through an AI-driven voice interview.
+
+---
+
+## ✨ Key Features
+
+* 📷 AI-powered room image analysis
+* 📊 Compliance scoring (0–100)
+* ⚠️ Intelligent detection of compliance gaps
+* 📝 AI-generated corrective action plan
+* 🎤 Voice-based mock compliance interview
+* 🤖 AI evaluation of spoken responses
+* 📈 Interactive compliance dashboard
+* 🗂️ Historical inspection reports
+* ☁️ Cloud deployment ready
+* 📱 Responsive modern interface
+
+---
+
+# 🖼️ Application Workflow
+
+```text
+Upload Room Image
+        │
+        ▼
+Select Compliance Standard
+        │
+        ▼
+Gemini Vision Analysis
+        │
+        ▼
+Compliance Score
+        │
+        ▼
+Detected Issues
+        │
+        ▼
+AI Action Plan
+        │
+        ▼
+Voice Interview
+        │
+        ▼
+AI Answer Evaluation
+        │
+        ▼
+Save Report
+        │
+        ▼
+Dashboard & History
 ```
 
 ---
 
-## Project Structure
+# 🎯 Supported Compliance Standards
 
-```
-visionai/
+* ✅ General Safety
+* 🏢 Office Safety
+* 🍳 Kitchen Hygiene
+* 🏠 Hostel Safety
+* 📦 Warehouse Safety
+* 🧪 Laboratory Safety
+
+---
+
+# 🏗️ Technology Stack
+
+| Category           | Technologies                 |
+| ------------------ | ---------------------------- |
+| Frontend           | React.js, Vite, Tailwind CSS |
+| Backend            | FastAPI                      |
+| Database           | SQLite                       |
+| AI                 | Google Gemini 2.5 Flash      |
+| Speech Recognition | Web Speech API               |
+| Charts             | Recharts                     |
+| Deployment         | Vercel & Render              |
+
+---
+
+# 🤖 AI Capabilities
+
+VisionAI utilizes **Google Gemini 2.5 Flash** for:
+
+* Image understanding
+* Compliance scoring
+* Gap detection
+* AI-generated recommendations
+* Interview question generation
+* Voice answer evaluation
+* Overall interview assessment
+
+---
+
+# 📂 Project Structure
+
+```text
+VisionAI/
+
 ├── frontend/
+│   ├── public/
+│   │   └── demo-images/
 │   ├── src/
-│   │   ├── components/       # Reusable UI components
-│   │   │   ├── Navbar.jsx
-│   │   │   ├── CircularScore.jsx
-│   │   │   ├── IssueCard.jsx
-│   │   │   ├── RecommendationList.jsx
-│   │   │   ├── MicButton.jsx
-│   │   │   ├── ScoreBadge.jsx
-│   │   │   ├── LoadingSpinner.jsx
-│   │   │   └── ErrorAlert.jsx
-│   │   ├── pages/            # Page components
-│   │   │   ├── Home.jsx      # Upload + Analysis results
-│   │   │   ├── Dashboard.jsx # Stats + Trend chart
-│   │   │   ├── History.jsx   # Report history + modal
-│   │   │   └── Interview.jsx # Voice interview flow
+│   │   ├── components/
+│   │   ├── pages/
 │   │   ├── services/
-│   │   │   └── api.js        # Axios API functions
-│   │   ├── contexts/
-│   │   │   └── AppContext.jsx
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   ├── vercel.json
-│   ├── vite.config.js
-│   └── tailwind.config.js
+│   │   ├── hooks/
+│   │   └── utils/
+│   └── package.json
 │
 ├── backend/
-│   ├── routers/
-│   │   ├── analyze.py        # POST /api/analyze
-│   │   ├── interview.py      # POST /api/questions, /api/evaluate
-│   │   ├── history.py        # GET /api/history
-│   │   └── dashboard.py      # GET /api/dashboard
+│   ├── api/
+│   ├── models/
 │   ├── services/
-│   │   └── gemini_service.py # All Gemini AI calls
-│   ├── main.py
 │   ├── database.py
-│   ├── models.py
-│   ├── schemas.py
-│   ├── requirements.txt
-│   └── render.yaml
+│   ├── main.py
+│   └── requirements.txt
 │
-├── .env.example
-├── .gitignore
-└── README.md
+├── README.md
+└── .env.example
 ```
 
 ---
 
-## Installation & Running Locally
+# ⚙️ Installation
 
-### Prerequisites
-- Python 3.10+
-- Node.js 18+
-- A [Gemini API Key](https://aistudio.google.com/apikey)
+## Clone Repository
 
-### Backend
+```bash
+git clone https://github.com/chimataraghuram/VISION-AI.git
+
+cd visionai
+```
+
+---
+
+## Backend
 
 ```bash
 cd backend
 
-# Create virtual environment
 python -m venv venv
-venv\Scripts\activate      # Windows
-# source venv/bin/activate # macOS/Linux
 
-# Install dependencies
+source venv/bin/activate
+
 pip install -r requirements.txt
 
-# Configure environment
-copy .env.example .env
-# Edit .env and add your GEMINI_API_KEY
-
-# Start the server
 uvicorn main:app --reload
 ```
 
-API docs available at: http://localhost:8000/docs
+---
 
-### Frontend
+## Frontend
 
 ```bash
 cd frontend
 
-# Install dependencies
 npm install
 
-# Configure environment
-copy .env.example .env
-# VITE_API_URL=http://localhost:8000
-
-# Start dev server
 npm run dev
 ```
 
-Open: http://localhost:5173
-
 ---
 
-## Environment Variables
+# 🔑 Environment Variables
 
-### Backend (`backend/.env`)
+Backend (`backend/.env`)
 
-| Variable | Description | Example |
-|---|---|---|
-| `GEMINI_API_KEY` | Google AI Studio API key | `AIzaSy...` |
-| `DATABASE_URL` | SQLite connection string | `sqlite:///./visionai.db` |
-| `FRONTEND_URL` | Frontend URL for CORS | `http://localhost:5173` |
+```env
+GEMINI_API_KEY=YOUR_GEMINI_API_KEY
 
-### Frontend (`frontend/.env`)
-
-| Variable | Description | Example |
-|---|---|---|
-| `VITE_API_URL` | Backend API base URL | `http://localhost:8000` |
-
----
-
-## Gemini API Setup
-
-1. Go to [Google AI Studio](https://aistudio.google.com/apikey)
-2. Click **Create API Key**
-3. Copy the key
-4. Add it to `backend/.env` as `GEMINI_API_KEY=<your_key>`
-
-The app uses **Gemini 2.5 Flash** for:
-- Image analysis (compliance scoring)
-- Interview question generation
-- Answer evaluation
-- Final interview summary
-
----
-
-## API Routes
-
-| Method | Route | Description |
-|---|---|---|
-| `POST` | `/api/analyze` | Analyze image for compliance |
-| `POST` | `/api/questions` | Generate 5 interview questions |
-| `POST` | `/api/evaluate` | Evaluate a voice answer |
-| `POST` | `/api/interview/save` | Save completed interview |
-| `GET` | `/api/history` | List all reports |
-| `GET` | `/api/history/{id}` | Single report detail |
-| `GET` | `/api/dashboard` | Dashboard statistics |
-| `GET` | `/health` | Health check |
-
----
-
-## Compliance Standards
-
-- 🛡️ General Safety
-- 🍽️ Kitchen Hygiene
-- 💼 Office Safety
-- 🏠 Hostel Safety
-- 🏭 Warehouse Safety
-- 🔬 Laboratory Safety
-
----
-
-## Deployment
-
-### Frontend → Vercel
-
-```bash
-cd frontend
-npm run build
-
-# Push to GitHub, then import repo in Vercel
-# Set environment variable: VITE_API_URL=https://your-backend.onrender.com
+DATABASE_URL=sqlite:///visionai.db
 ```
 
-### Backend → Render
+Frontend (`frontend/.env`)
 
-1. Push code to GitHub
-2. Create new **Web Service** in Render
-3. Connect your GitHub repo (`/backend` directory)
-4. Set:
-   - **Build command**: `pip install -r requirements.txt`
-   - **Start command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-5. Add env variables: `GEMINI_API_KEY`, `FRONTEND_URL`
-6. Deploy
+```env
+VITE_API_URL=http://localhost:8000
+```
 
 ---
 
-## Voice Interview Notes
+# 🌐 API Endpoints
 
-The voice interview uses the **Web Speech API** — a browser-native API.
+## Compliance
 
-- ✅ Fully supported in **Google Chrome**
-- ⚠️ Partial support in Edge
-- ❌ Not supported in Firefox (transcript will show error)
-
-For best results, use Chrome with microphone permissions granted.
+| Method | Endpoint     | Description            |
+| ------ | ------------ | ---------------------- |
+| POST   | /api/analyze | Analyze uploaded image |
 
 ---
 
-## License
+## Voice Interview
 
-MIT License — Built for educational and professional demonstration purposes.
+| Method | Endpoint            | Description                  |
+| ------ | ------------------- | ---------------------------- |
+| POST   | /api/questions      | Generate interview questions |
+| POST   | /api/evaluate       | Evaluate user answer         |
+| POST   | /api/interview/save | Save interview result        |
+
+---
+
+## Reports
+
+| Method | Endpoint          | Description                 |
+| ------ | ----------------- | --------------------------- |
+| GET    | /api/history      | Retrieve inspection history |
+| GET    | /api/history/{id} | Retrieve specific report    |
+| GET    | /api/dashboard    | Dashboard statistics        |
+
+---
+
+# 🎤 Voice Interview
+
+The interview module consists of five AI-generated questions based on the selected compliance standard.
+
+Workflow:
+
+1. Generate questions using Gemini AI.
+2. Capture spoken responses using the Web Speech API.
+3. Convert speech to text.
+4. Evaluate responses using Gemini.
+5. Display AI-generated feedback and scores.
+
+---
+
+# 📊 Dashboard
+
+The dashboard provides:
+
+* Total inspections
+* Average compliance score
+* Highest compliance score
+* Lowest compliance score
+* Compliance trend visualization
+* Recent inspection history
+
+---
+
+# 📷 Demo Images
+
+VisionAI includes multiple demo images for quick testing, covering:
+
+* Office environments
+* Kitchens
+* Hostels
+* Laboratories
+* Warehouses
+
+Users may also upload their own room images for analysis.
+
+---
+
+# 🚀 Deployment
+
+Frontend
+
+* Vercel
+
+Backend
+
+* Render / Vercel Serverless
+
+API Documentation
+
+```text
+http://localhost:8000/docs
+```
+
+---
+
+# 🔮 Future Enhancements
+
+* PDF Compliance Reports
+* User Authentication
+* Multi-language Support
+* Mobile Application
+* Healthcare Compliance Standards
+* AI Trend Analytics
+* Team Collaboration
+
+---
+
+# 👨‍💻 Developer
+
+Developed as an AI Full Stack Engineering technical assessment.
+
+Built using **React**, **FastAPI**, **Gemini 2.5 Flash**, **Tailwind CSS**, and **SQLite**.
+
+---
+
+# 📄 License
+
+This project is released under the **MIT License**.
+
+---
+
+⭐ If you found this project interesting, consider giving it a star!

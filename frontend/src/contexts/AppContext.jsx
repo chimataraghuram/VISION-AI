@@ -2,7 +2,7 @@
  * VisionAI App Context
  * Global state management for current report and app-wide notifications.
  */
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 
 const AppContext = createContext(null);
 
@@ -11,6 +11,17 @@ export function AppProvider({ children }) {
   const [currentReport, setCurrentReport] = useState(null);
   // Toast notifications
   const [toast, setToast] = useState(null);
+  // Theme state (Dark Mode by default)
+  const [isDarkMode, setIsDarkMode] = useState(true);
+
+  // Sync theme class with HTML element
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
 
   const showToast = useCallback((message, type = 'info', duration = 4000) => {
     const id = Date.now();
@@ -20,6 +31,10 @@ export function AppProvider({ children }) {
 
   const clearReport = useCallback(() => setCurrentReport(null), []);
 
+  const toggleTheme = useCallback(() => {
+    setIsDarkMode(prev => !prev);
+  }, []);
+
   return (
     <AppContext.Provider value={{
       currentReport,
@@ -27,6 +42,8 @@ export function AppProvider({ children }) {
       clearReport,
       toast,
       showToast,
+      isDarkMode,
+      toggleTheme,
     }}>
       {children}
     </AppContext.Provider>

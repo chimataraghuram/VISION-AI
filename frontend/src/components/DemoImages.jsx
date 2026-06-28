@@ -53,13 +53,13 @@ export default function DemoImages({ onLoadDemo }) {
             whileHover={{ y: -6, scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => onLoadDemo(demo.file, demo.standard)}
-            className="flex flex-col items-center gap-3 p-4 bg-white border border-surface-200/80 rounded-2xl shadow-sm hover:shadow-md hover:border-primary-300 transition-colors text-center w-full"
+            className="flex flex-col items-center gap-3 p-4 bg-white dark:bg-[#0b1220] border border-surface-200/80 rounded-2xl shadow-sm hover:shadow-md hover:border-primary-300 transition-colors text-center w-full"
           >
             <div className="w-12 h-12 bg-primary-50 rounded-2xl flex items-center justify-center text-2xl">
               {demo.icon}
             </div>
             <div>
-              <p className="text-sm font-bold text-surface-900 leading-tight truncate">{demo.name}</p>
+              <p className="text-sm font-bold text-surface-900 dark:text-white leading-tight truncate">{demo.name}</p>
               <p className="text-[10px] font-medium text-primary-600 mt-1 bg-primary-50 px-2 py-0.5 rounded-full inline-block">
                 {demo.standard}
               </p>

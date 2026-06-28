@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldCheck, Eye, Mic, Sun, Moon } from 'lucide-react';
+import { useApp } from '../contexts/AppContext';
 
 export default function Navbar() {
   const { pathname } = useLocation();
+  const { isDarkMode, toggleTheme } = useApp();
   const [scrolled, setScrolled] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(true); // Default to Dark Mode as requested
 
   useEffect(() => {
     const handleScroll = () => {
@@ -19,27 +20,37 @@ export default function Navbar() {
   return (
     <div className="w-full flex justify-center sticky top-4 z-50 px-4">
       <motion.nav
+        initial={{ y: -20, opacity: 0 }}
         animate={{
-          height: scrolled ? 64 : 90,
-          paddingTop: scrolled ? 8 : 24,
-          paddingBottom: scrolled ? 8 : 24,
-          backgroundColor: scrolled ? 'rgba(5, 8, 22, 0.95)' : 'rgba(5, 8, 22, 0.75)'
+          y: 0,
+          opacity: 1,
+          height: scrolled ? 60 : 80,
+          backgroundColor: scrolled ? 'rgba(11, 18, 32, 0.92)' : 'rgba(11, 18, 32, 0.75)',
+          boxShadow: scrolled 
+            ? '0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 40px 0 rgba(37, 99, 235, 0.12)' 
+            : '0 4px 20px -5px rgba(0, 0, 0, 0.3), 0 0 20px 0 rgba(37, 99, 235, 0.05)'
         }}
         transition={{ type: 'spring', stiffness: 120, damping: 20 }}
-        className="w-full max-w-5xl rounded-[28px] border border-white/[0.08] backdrop-blur-xl shadow-[0_0_30px_rgba(37,99,235,0.08)] flex items-center justify-between px-6"
+        className="w-[85%] max-w-5xl rounded-[28px] border border-white/[0.08] backdrop-blur-[24px] flex items-center justify-between px-6"
       >
         {/* LEFT: Logo Shield */}
         <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 bg-gradient-to-tr from-blue-600 to-blue-400 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform duration-200">
+          <motion.div 
+            animate={{ scale: scrolled ? 0.9 : 1 }}
+            className="w-9 h-9 bg-gradient-to-tr from-blue-600 to-blue-400 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform duration-200"
+          >
             <ShieldCheck className="w-5 h-5 text-white" />
-          </div>
-          <span className="text-lg font-black text-white tracking-tight">
+          </motion.div>
+          <motion.span 
+            animate={{ scale: scrolled ? 0.95 : 1 }}
+            className="text-lg font-black text-white tracking-tight origin-left"
+          >
             Vision<span className="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">AI</span>
-          </span>
+          </motion.span>
         </Link>
 
         {/* CENTER: Capsule Navigation */}
-        <div className="flex items-center bg-white/[0.04] border border-white/[0.06] p-1 rounded-2xl">
+        <div className="flex items-center bg-white dark:bg-[#0b1220]/[0.04] border border-white/[0.06] p-1 rounded-2xl">
           {[
             { to: '/', label: 'Inspection', icon: Eye },
             { to: '/interview', label: 'Interview', icon: Mic }
@@ -56,7 +67,7 @@ export default function Navbar() {
                 {isActive && (
                   <motion.div
                     layoutId="activeDarkNav"
-                    className="absolute inset-0 bg-white/[0.06] border border-white/[0.08] rounded-xl"
+                    className="absolute inset-0 bg-white dark:bg-[#0b1220]/[0.06] border border-white/[0.08] rounded-xl"
                     transition={{ type: 'spring', stiffness: 150, damping: 18 }}
                   />
                 )}
@@ -67,14 +78,14 @@ export default function Navbar() {
                   <Icon className="w-4 h-4" />
                   
                   {/* Label disappears when scrolled, only icons remain */}
-                  <AnimatePresence>
+                  <AnimatePresence initial={false}>
                     {!scrolled && (
                       <motion.span
                         initial={{ opacity: 0, width: 0 }}
                         animate={{ opacity: 1, width: 'auto' }}
                         exit={{ opacity: 0, width: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="overflow-hidden"
+                        className="overflow-hidden whitespace-nowrap"
                       >
                         {item.label}
                       </motion.span>
@@ -95,34 +106,55 @@ export default function Navbar() {
           })}
         </div>
 
-        {/* RIGHT: iOS Switch Dark Mode Toggle */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Sun className={`w-3.5 h-3.5 ${isDarkMode ? 'text-white/30' : 'text-amber-400'}`} />
-            
-            {/* iOS Switch */}
-            <button
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              className="w-10 h-6 bg-white/[0.08] rounded-full p-0.5 border border-white/[0.08] relative flex items-center cursor-pointer focus:outline-none"
-            >
-              <motion.div
-                layout
-                transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-                className="w-4.5 h-4.5 bg-blue-500 rounded-full shadow-md flex items-center justify-center"
-                style={{
-                  x: isDarkMode ? 16 : 0
-                }}
+        {/* RIGHT: Switch / Icon-only Dark Mode Toggle */}
+        <div className="flex items-center">
+          <AnimatePresence mode="wait">
+            {scrolled ? (
+              <motion.button
+                key="collapsed"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                onClick={toggleTheme}
+                className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-blue-400 cursor-pointer focus:outline-none hover:bg-white/10 transition-colors"
               >
-                {isDarkMode ? (
-                  <Moon className="w-2.5 h-2.5 text-white" />
-                ) : (
-                  <Sun className="w-2.5 h-2.5 text-white" />
-                )}
+                {isDarkMode ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+              </motion.button>
+            ) : (
+              <motion.div
+                key="expanded"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="flex items-center gap-2 bg-white dark:bg-[#0b1220]/[0.02] border border-white/[0.04] p-1 rounded-full"
+              >
+                <Sun className={`w-3.5 h-3.5 ${isDarkMode ? 'text-white/30' : 'text-amber-400'}`} />
+                
+                {/* iOS Switch */}
+                <button
+                  onClick={toggleTheme}
+                  className="w-10 h-6 bg-white dark:bg-[#0b1220]/[0.08] rounded-full p-0.5 border border-white/[0.08] relative flex items-center cursor-pointer focus:outline-none"
+                >
+                  <motion.div
+                    layout
+                    transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+                    className="w-4.5 h-4.5 bg-blue-500 rounded-full shadow-md flex items-center justify-center"
+                    style={{
+                      x: isDarkMode ? 16 : 0
+                    }}
+                  >
+                    {isDarkMode ? (
+                      <Moon className="w-2.5 h-2.5 text-white" />
+                    ) : (
+                      <Sun className="w-2.5 h-2.5 text-white" />
+                    )}
+                  </motion.div>
+                </button>
+                
+                <Moon className={`w-3.5 h-3.5 ${isDarkMode ? 'text-blue-400' : 'text-white/30'}`} />
               </motion.div>
-            </button>
-            
-            <Moon className={`w-3.5 h-3.5 ${isDarkMode ? 'text-blue-400' : 'text-white/30'}`} />
-          </div>
+            )}
+          </AnimatePresence>
         </div>
       </motion.nav>
     </div>

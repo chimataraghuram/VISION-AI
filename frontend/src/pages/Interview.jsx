@@ -211,7 +211,7 @@ export default function Interview() {
           <Mic className="w-3.5 h-3.5" />
           Interactive Assessment
         </div>
-        <h1 className="text-3xl font-black tracking-tight text-surface-900">Compliance Voice Interview</h1>
+        <h1 className="text-3xl font-black tracking-tight text-surface-900 dark:text-white">Compliance Voice Interview</h1>
         <p className="text-surface-500 text-sm max-w-md mx-auto">
           Assess your understanding of safety protocols through a 5-question mock verbal training session.
         </p>
@@ -224,7 +224,7 @@ export default function Interview() {
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          className="card p-8 bg-white border border-surface-200 rounded-3xl shadow-sm space-y-6"
+          className="card space-y-6"
         >
           <span className="text-xs font-bold text-surface-400 uppercase tracking-widest">Configuration</span>
 
@@ -293,11 +293,11 @@ export default function Interview() {
             className="card p-8 bg-gradient-to-tr from-surface-50 to-white border border-surface-200 rounded-3xl shadow-sm space-y-3"
           >
             <span className="text-[10px] font-bold text-primary-500 uppercase tracking-widest">Question prompt</span>
-            <h2 className="text-xl font-bold text-surface-900 leading-snug">{currentQuestion}</h2>
+            <h2 className="text-xl font-bold text-surface-900 dark:text-white leading-snug">{currentQuestion}</h2>
           </motion.div>
 
           {/* Voice recorder card */}
-          <div className="card p-8 bg-white border border-surface-200 rounded-3xl shadow-sm flex flex-col items-center gap-6">
+          <div className="card flex flex-col items-center gap-6">
             <p className="text-xs text-surface-500 text-center font-medium max-w-sm">
               Click the microphone, formulate your response, and click again to transcribe.
             </p>
@@ -363,7 +363,7 @@ export default function Interview() {
           </div>
 
           {/* Assessment Score */}
-          <div className="card p-6 bg-white border border-surface-200 rounded-3xl shadow-sm flex items-center gap-6">
+          <div className="card flex items-center gap-6">
             <ScoreRing score={evaluation.score} />
             <div className="space-y-1.5">
               <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest">Question Score</span>
@@ -375,7 +375,7 @@ export default function Interview() {
           </div>
 
           {/* Feedback details */}
-          <div className="card p-8 bg-white border border-surface-200 rounded-3xl shadow-sm space-y-3">
+          <div className="card space-y-3">
             <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest">AI Examiner Feedback</span>
             <p className="text-sm text-surface-600 leading-relaxed">{evaluation.feedback}</p>
           </div>
@@ -427,14 +427,14 @@ export default function Interview() {
             </div>
 
             {/* Split layout: Question details */}
-            <div className="card p-8 bg-white border border-surface-200 rounded-3xl shadow-sm space-y-6">
+            <div className="card space-y-6">
               <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest">Question Breakdown</span>
               <div className="h-px bg-surface-100" />
               <div className="space-y-4">
                 {answers.map((a, i) => (
                   <div key={i} className="p-4 bg-surface-50 border border-surface-200/60 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="space-y-1 max-w-md">
-                      <p className="text-xs font-bold text-surface-900 truncate">{a.question}</p>
+                      <p className="text-xs font-bold text-surface-900 dark:text-white truncate">{a.question}</p>
                       <p className="text-[10px] text-surface-400 italic truncate">"{a.answer}"</p>
                       <p className="text-[10px] text-surface-500 line-clamp-1">{a.feedback}</p>
                     </div>

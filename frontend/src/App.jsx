@@ -37,7 +37,7 @@ import Footer from './components/Footer';
 
 function Layout() {
   return (
-    <div className="min-h-screen bg-surface-50 flex flex-col justify-between">
+    <div className="min-h-screen bg-surface-50 dark:bg-[#050816] text-surface-900 dark:text-white transition-colors duration-300 flex flex-col justify-between">
       <div>
         <Navbar />
         <main className="pt-2 pb-8">

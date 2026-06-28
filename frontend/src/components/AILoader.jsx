@@ -35,7 +35,7 @@ export default function AILoader() {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ type: 'spring', damping: 20 }}
-        className="bg-white border border-surface-200 shadow-2xl rounded-3xl p-8 max-w-md w-full text-center flex flex-col items-center gap-6"
+        className="bg-white dark:bg-[#0b1220] border border-surface-200 shadow-2xl rounded-3xl p-8 max-w-md w-full text-center flex flex-col items-center gap-6"
       >
         {/* Animated robot ring */}
         <div className="relative w-24 h-24 flex items-center justify-center">
@@ -54,7 +54,7 @@ export default function AILoader() {
         </div>
 
         <div>
-          <h3 className="text-xl font-bold text-surface-900">VisionAI is analyzing</h3>
+          <h3 className="text-xl font-bold text-surface-900 dark:text-white">VisionAI is analyzing</h3>
           <p className="text-sm text-surface-500 mt-1">Evaluating room safety against regulations</p>
         </div>
 

@@ -25,7 +25,7 @@ export default function WorkflowPanel() {
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', damping: 20 }}
-      className="w-full bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] p-6 sm:p-8 rounded-3xl relative overflow-hidden shadow-[0_0_50px_rgba(37,99,235,0.05)]"
+      className="w-full bg-white dark:bg-[#0b1220]/[0.02] backdrop-blur-xl border border-white/[0.08] p-6 sm:p-8 rounded-3xl relative overflow-hidden shadow-[0_0_50px_rgba(37,99,235,0.05)]"
     >
       <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/5 via-transparent to-transparent pointer-events-none" />
       

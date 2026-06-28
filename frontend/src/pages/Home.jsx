@@ -205,7 +205,7 @@ export default function Home() {
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: 'spring', damping: 22 }}
-          className="bg-white rounded-3xl border border-surface-200/80 shadow-xl p-6 sm:p-8"
+          className="bg-white dark:bg-[#0b1220] rounded-3xl border border-surface-200/80 shadow-xl p-6 sm:p-8"
         >
           <div className="grid md:grid-cols-2 gap-8 items-start">
             {/* Upload Zone */}
@@ -330,16 +330,16 @@ export default function Home() {
             {/* Split layout: Score & Executive Summary */}
             <div className="grid md:grid-cols-3 gap-6">
               {/* Score card */}
-              <div className="card flex flex-col items-center justify-center p-8 bg-white border border-surface-200 rounded-3xl shadow-sm text-center">
+              <div className="card flex flex-col items-center justify-center text-center">
                 <span className="text-xs font-bold text-surface-400 uppercase tracking-widest mb-6">Inspection Score</span>
                 <CircularScore score={result.score} size={150} />
               </div>
 
               {/* Summary card */}
-              <div className="card md:col-span-2 p-8 bg-white border border-surface-200 rounded-3xl shadow-sm space-y-4">
+              <div className="card md:col-span-2 space-y-4">
                 <span className="text-xs font-bold text-surface-400 uppercase tracking-widest">Executive Summary</span>
                 <div className="h-px bg-surface-100" />
-                <h3 className="text-lg font-bold text-surface-900 leading-snug">Assessment Findings</h3>
+                <h3 className="text-lg font-bold text-surface-900 dark:text-white leading-snug">Assessment Findings</h3>
                 <p className="text-sm text-surface-600 leading-relaxed">
                   {result.summary}
                 </p>
@@ -355,7 +355,7 @@ export default function Home() {
             </div>
 
             {/* Compliance Issues */}
-            <div className="card p-8 bg-white border border-surface-200 rounded-3xl shadow-sm space-y-6">
+            <div className="card space-y-6">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-surface-400 uppercase tracking-widest">Compliance Issues</span>
                 <span className="text-xs font-bold bg-red-100 text-red-700 px-2.5 py-0.5 rounded-full">
@@ -390,7 +390,7 @@ export default function Home() {
 
             {/* Recommendations Action Plan */}
             {result.recommendations && result.recommendations.length > 0 && (
-              <div className="card p-8 bg-white border border-surface-200 rounded-3xl shadow-sm space-y-6">
+              <div className="card space-y-6">
                 <span className="text-xs font-bold text-surface-400 uppercase tracking-widest">AI Action Plan</span>
                 <div className="h-px bg-surface-100" />
                 <RecommendationList recommendations={result.recommendations} />

@@ -18,7 +18,7 @@ import { Link } from 'react-router-dom';
 function CustomTooltip({ active, payload, label }) {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white/95 backdrop-blur-md border border-surface-200 rounded-xl shadow-xl p-3.5 text-xs">
+      <div className="bg-white/95 dark:bg-[#0b1220]/95 backdrop-blur-md border border-surface-200 rounded-xl shadow-xl p-3.5 text-xs">
         <p className="font-bold text-surface-800 mb-1">{label}</p>
         <div className="h-px bg-surface-100 my-1.5" />
         <p className="text-primary-600 font-extrabold text-sm">{payload[0].value}/100</p>
@@ -61,12 +61,12 @@ function StatCard({ label, value, icon: Icon, color, subtitle, delay }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', damping: 20, delay }}
       whileHover={{ y: -4, shadow: 'lg' }}
-      className="card bg-white border border-surface-200 shadow-sm p-6 flex flex-col justify-between min-h-[140px] rounded-2xl relative overflow-hidden"
+      className="card flex flex-col justify-between min-h-[140px] relative overflow-hidden"
     >
       <div className="flex justify-between items-start">
         <div>
           <p className="text-[10px] font-bold text-surface-400 uppercase tracking-widest">{label}</p>
-          <h3 className="text-3xl font-extrabold text-surface-900 mt-2 tracking-tight tabular-nums">
+          <h3 className="text-3xl font-extrabold text-surface-900 dark:text-white mt-2 tracking-tight tabular-nums">
             {valToShow}
           </h3>
         </div>
@@ -111,7 +111,7 @@ export default function Dashboard() {
     >
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-black tracking-tight text-surface-900 leading-none">
+        <h1 className="text-3xl font-black tracking-tight text-surface-900 dark:text-white leading-none">
           Compliance Dashboard
         </h1>
         <p className="text-surface-500 text-sm mt-2">
@@ -126,7 +126,7 @@ export default function Dashboard() {
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="card text-center py-20 bg-white border border-surface-200 rounded-3xl shadow-sm flex flex-col items-center gap-4 max-w-md mx-auto"
+          className="card text-center py-20 flex flex-col items-center gap-4 max-w-md mx-auto"
         >
           <BarChart2 className="w-12 h-12 text-surface-300" />
           <div>
@@ -183,7 +183,7 @@ export default function Dashboard() {
           <div className="grid lg:grid-cols-3 gap-6 items-start">
             {/* Trend Chart */}
             {data.trend && data.trend.length > 1 && (
-              <div className="card lg:col-span-2 p-6 bg-white border border-surface-200 rounded-2xl shadow-sm space-y-6">
+              <div className="card lg:col-span-2 space-y-6">
                 <div className="flex justify-between items-center">
                   <div>
                     <h2 className="text-sm font-bold text-surface-800 uppercase tracking-wider">Compliance Trend</h2>
@@ -231,7 +231,7 @@ export default function Dashboard() {
             )}
 
             {/* Recent Reports List */}
-            <div className="card p-6 bg-white border border-surface-200 rounded-2xl shadow-sm space-y-6">
+            <div className="card space-y-6">
               <div className="flex justify-between items-center">
                 <div>
                   <h2 className="text-sm font-bold text-surface-800 uppercase tracking-wider">Recent Reports</h2>

@@ -75,7 +75,7 @@ export default function History() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-surface-900 flex items-center gap-2">
+          <h1 className="text-3xl font-black tracking-tight text-surface-900 dark:text-white flex items-center gap-2">
             Compliance History
           </h1>
           <p className="text-surface-500 text-sm mt-2">
@@ -84,7 +84,7 @@ export default function History() {
         </div>
 
         {/* Filter Dropdown */}
-        <div className="flex items-center gap-2 bg-white border border-surface-200 px-3 py-1.5 rounded-xl shadow-sm">
+        <div className="flex items-center gap-2 bg-white dark:bg-[#0b1220] border border-surface-200 px-3 py-1.5 rounded-xl shadow-sm">
           <Filter className="w-4 h-4 text-surface-400" />
           <select
             value={standard}
@@ -103,7 +103,7 @@ export default function History() {
 
       {/* Empty State */}
       {!loading && reports.length === 0 && (
-        <div className="card text-center py-20 bg-white border border-surface-200 rounded-3xl shadow-sm max-w-md mx-auto flex flex-col items-center gap-4">
+        <div className="card text-center py-20 max-w-md mx-auto flex flex-col items-center gap-4">
           <HistoryIcon className="w-12 h-12 text-surface-300" />
           <div>
             <h3 className="text-lg font-bold text-surface-800">No reports found</h3>
@@ -126,14 +126,14 @@ export default function History() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ type: 'spring', damping: 20, delay: idx * 0.04 }}
                 whileHover={{ y: -4 }}
-                className="card bg-white border border-surface-200/80 hover:border-primary-300 hover:shadow-md transition-all rounded-2xl p-5 flex flex-col justify-between min-h-[170px]"
+                className="card hover:border-primary-300 hover:shadow-md transition-all p-5 flex flex-col justify-between min-h-[170px]"
               >
                 <div>
                   <div className="flex justify-between items-start">
                     <span className="text-[10px] font-bold text-surface-400 font-mono">#{r.id}</span>
                     <ScoreBadge score={r.score} />
                   </div>
-                  <h3 className="text-sm font-extrabold text-surface-900 mt-3 leading-snug">{r.standard}</h3>
+                  <h3 className="text-sm font-extrabold text-surface-900 dark:text-white mt-3 leading-snug">{r.standard}</h3>
                 </div>
 
                 <div className="mt-6 flex justify-between items-center border-t border-surface-100 pt-3">
@@ -192,13 +192,13 @@ export default function History() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-3xl shadow-2xl border border-surface-200/80 w-full max-w-2xl my-8 overflow-hidden"
+              className="bg-white dark:bg-[#0b1220] rounded-3xl shadow-2xl border border-surface-200/80 w-full max-w-2xl my-8 overflow-hidden"
             >
               {/* Header */}
               <div className="flex justify-between items-start p-6 border-b border-surface-100 bg-surface-50/50">
                 <div>
                   <span className="text-[10px] font-bold text-surface-400 font-mono">REPORT ARCHIVE #{selectedReport.id}</span>
-                  <h2 className="text-lg font-black text-surface-900 mt-1">{selectedReport.standard}</h2>
+                  <h2 className="text-lg font-black text-surface-900 dark:text-white mt-1">{selectedReport.standard}</h2>
                   <p className="text-xs text-surface-400 mt-0.5">
                     Assessed on {new Date(selectedReport.date).toLocaleString('en-US')}
                   </p>

@@ -25,13 +25,19 @@ export default function Navbar() {
           y: 0,
           opacity: 1,
           height: scrolled ? 60 : 80,
-          backgroundColor: scrolled ? 'rgba(11, 18, 32, 0.92)' : 'rgba(11, 18, 32, 0.75)',
-          boxShadow: scrolled 
-            ? '0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 40px 0 rgba(37, 99, 235, 0.12)' 
-            : '0 4px 20px -5px rgba(0, 0, 0, 0.3), 0 0 20px 0 rgba(37, 99, 235, 0.05)'
+          backgroundColor: isDarkMode 
+            ? (scrolled ? 'rgba(11, 18, 32, 0.92)' : 'rgba(11, 18, 32, 0.75)')
+            : (scrolled ? 'rgba(255, 255, 255, 0.92)' : 'rgba(255, 255, 255, 0.75)'),
+          boxShadow: isDarkMode
+            ? (scrolled 
+              ? '0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 40px 0 rgba(37, 99, 235, 0.12)' 
+              : '0 4px 20px -5px rgba(0, 0, 0, 0.3), 0 0 20px 0 rgba(37, 99, 235, 0.05)')
+            : (scrolled 
+              ? '0 10px 30px -10px rgba(0, 0, 0, 0.1), 0 0 40px 0 rgba(37, 99, 235, 0.05)' 
+              : '0 4px 20px -5px rgba(0, 0, 0, 0.05), 0 0 20px 0 rgba(37, 99, 235, 0.02)'),
         }}
         transition={{ type: 'spring', stiffness: 120, damping: 20 }}
-        className="w-[85%] max-w-5xl rounded-[28px] border border-white/[0.08] backdrop-blur-[24px] flex items-center justify-between px-6"
+        className="w-[85%] max-w-5xl rounded-[28px] border border-surface-200 dark:border-white/[0.08] backdrop-blur-[24px] flex items-center justify-between px-6"
       >
         {/* LEFT: Logo Shield */}
         <Link to="/" className="flex items-center gap-2.5 group">
@@ -43,14 +49,14 @@ export default function Navbar() {
           </motion.div>
           <motion.span 
             animate={{ scale: scrolled ? 0.95 : 1 }}
-            className="text-lg font-black text-white tracking-tight origin-left"
+            className="text-lg font-black text-surface-900 dark:text-white tracking-tight origin-left"
           >
             Vision<span className="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">AI</span>
           </motion.span>
         </Link>
 
         {/* CENTER: Capsule Navigation */}
-        <div className="flex items-center bg-white dark:bg-[#0b1220]/[0.04] border border-white/[0.06] p-1 rounded-2xl">
+        <div className="flex items-center bg-surface-100 dark:bg-[#0b1220]/[0.04] border border-surface-200 dark:border-white/[0.06] p-1 rounded-2xl">
           {[
             { to: '/', label: 'Inspection', icon: Eye },
             { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -68,13 +74,13 @@ export default function Navbar() {
                 {isActive && (
                   <motion.div
                     layoutId="activeDarkNav"
-                    className="absolute inset-0 bg-white dark:bg-[#0b1220]/[0.06] border border-white/[0.08] rounded-xl"
+                    className="absolute inset-0 bg-white dark:bg-[#0b1220]/[0.06] border border-surface-200 dark:border-white/[0.08] rounded-xl shadow-sm dark:shadow-none"
                     transition={{ type: 'spring', stiffness: 150, damping: 18 }}
                   />
                 )}
                 
                 <span className={`relative z-10 flex items-center gap-1.5 transition-colors duration-150 ${
-                  isActive ? 'text-blue-400' : 'text-white/60 hover:text-white'
+                  isActive ? 'text-blue-600 dark:text-blue-400' : 'text-surface-500 dark:text-white/60 hover:text-surface-900 dark:hover:text-white'
                 }`}>
                   <Icon className="w-4 h-4" />
                   
@@ -111,7 +117,7 @@ export default function Navbar() {
         <div className="flex items-center">
           <button
             onClick={toggleTheme}
-            className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-blue-400 cursor-pointer focus:outline-none hover:bg-white/10 transition-colors"
+            className="w-10 h-10 rounded-full bg-surface-100 dark:bg-white/5 border border-surface-200 dark:border-white/10 flex items-center justify-center text-blue-500 dark:text-blue-400 cursor-pointer focus:outline-none hover:bg-surface-200 dark:hover:bg-white/10 transition-colors"
             title="Toggle Theme"
           >
             {isDarkMode ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}

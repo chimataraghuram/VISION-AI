@@ -1,17 +1,8 @@
-/**
- * Interview Page — VisionAI
- * 5-question voice compliance interview flow:
- * 1. Select standard
- * 2. Generate questions (Gemini)
- * 3. Display question → record answer (Web Speech API)
- * 4. Evaluate answer (Gemini) → show score + feedback
- * 5. Next question → repeat × 5
- * 6. Final summary: overall score, strengths, weaknesses, suggestions
- */
 import { useState, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Mic, ChevronRight, Trophy, AlertCircle,
-  CheckCircle, XCircle, Lightbulb, RotateCcw, Star
+  Mic, ChevronRight, Trophy, RotateCcw, Star,
+  Volume2, ShieldAlert, Sparkles, CheckCircle
 } from 'lucide-react';
 import MicButton from '../components/MicButton';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -42,7 +33,9 @@ function ScoreStars({ score }) {
       {[...Array(10)].map((_, i) => (
         <Star
           key={i}
-          className={`w-4 h-4 ${i < score ? 'text-amber-400 fill-amber-400' : 'text-surface-200'}`}
+          className={`w-4 h-4 transition-transform duration-300 hover:scale-110 ${
+            i < score ? 'text-amber-400 fill-amber-400' : 'text-surface-200'
+          }`}
         />
       ))}
     </div>
@@ -51,22 +44,32 @@ function ScoreStars({ score }) {
 
 function ScoreRing({ score, max = 10 }) {
   const pct = (score / max) * 100;
-  const radius = 40;
+  const radius = 38;
   const circ = 2 * Math.PI * radius;
   const offset = circ - (pct / 100) * circ;
-  const color = score >= 7 ? '#10b981' : score >= 5 ? '#f59e0b' : '#ef4444';
+  const color = score >= 7 ? '#16a34a' : score >= 5 ? '#f59e0b' : '#ef4444';
 
   return (
-    <div className="relative w-24 h-24">
-      <svg width="96" height="96" className="-rotate-90">
-        <circle cx="48" cy="48" r={radius} fill="none" stroke="#e2e8f0" strokeWidth={8} />
-        <circle cx="48" cy="48" r={radius} fill="none" stroke={color} strokeWidth={8}
-          strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
-          style={{ transition: 'stroke-dashoffset 0.8s ease' }} />
+    <div className="relative w-20 h-20">
+      <svg width="80" height="80" className="-rotate-90">
+        <circle cx="40" cy="40" r={radius} fill="none" stroke="#f1f5f9" strokeWidth={6} />
+        <motion.circle
+          cx="40"
+          cy="40"
+          r={radius}
+          fill="none"
+          stroke={color}
+          strokeWidth={6}
+          strokeDasharray={circ}
+          initial={{ strokeDashoffset: circ }}
+          animate={{ strokeDashoffset: offset }}
+          transition={{ duration: 1, ease: 'easeOut' }}
+          strokeLinecap="round"
+        />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-2xl font-bold" style={{ color }}>{score}</span>
-        <span className="text-xs text-surface-400">/{max}</span>
+        <span className="text-xl font-bold tracking-tight" style={{ color }}>{score}</span>
+        <span className="text-[9px] text-surface-400">/{max}</span>
       </div>
     </div>
   );
@@ -87,7 +90,7 @@ export default function Interview() {
   const currentQuestion = questions[currentIdx];
   const totalQuestions  = 5;
 
-  // ── Step 1: Generate questions ──────────────────────────────────────────
+  // ── Step 1: Generate Questions ────────────────────────────────────────────
   const startInterview = async () => {
     setLoading(true);
     setError(null);
@@ -106,10 +109,10 @@ export default function Interview() {
     }
   };
 
-  // ── Step 2: Transcript from mic ─────────────────────────────────────────
+  // ── Step 2: Speech transcript received ────────────────────────────────────
   const handleTranscript = useCallback((text) => {
     setTranscript(text);
-    setPhase(PHASES.FEEDBACK); // Wait for user to confirm or re-record
+    setPhase(PHASES.FEEDBACK);
   }, []);
 
   const handleMicError = useCallback((msg) => {
@@ -117,10 +120,10 @@ export default function Interview() {
     setPhase(PHASES.QUESTION);
   }, []);
 
-  // ── Step 3: Evaluate answer ─────────────────────────────────────────────
+  // ── Step 3: Evaluate response ─────────────────────────────────────────────
   const handleEvaluate = async () => {
     if (!transcript.trim()) {
-      setError('Please record your answer first.');
+      setError('Please provide or speak your answer before submitting.');
       return;
     }
     setPhase(PHASES.EVALUATING);
@@ -130,7 +133,6 @@ export default function Interview() {
       setEvaluation(result);
       setPhase(PHASES.FEEDBACK);
 
-      // Save this Q&A to answers list
       setAnswers((prev) => [
         ...prev,
         { question: currentQuestion, answer: transcript, ...result },
@@ -141,7 +143,7 @@ export default function Interview() {
     }
   };
 
-  // ── Step 4: Next question / finish ──────────────────────────────────────
+  // ── Step 4: Next Question / Finish ────────────────────────────────────────
   const handleNext = async () => {
     setTranscript('');
     setEvaluation(null);
@@ -149,7 +151,6 @@ export default function Interview() {
 
     const nextIdx = currentIdx + 1;
     if (nextIdx >= totalQuestions) {
-      // Interview complete — save and show summary
       await finishInterview();
     } else {
       setCurrentIdx(nextIdx);
@@ -157,7 +158,7 @@ export default function Interview() {
     }
   };
 
-  // ── Step 5: Save + final summary ───────────────────────────────────────
+  // ── Step 5: Save Interview results ────────────────────────────────────────
   const finishInterview = async () => {
     setLoading(true);
     setPhase(PHASES.COMPLETE);
@@ -173,14 +174,13 @@ export default function Interview() {
       });
       setFinalResult(saved);
     } catch (err) {
-      // Non-critical — show local summary anyway
       const avgScore = answers.reduce((s, a) => s + a.score, 0) / answers.length;
       setFinalResult({
         standard,
         overall_score: Math.round(avgScore * 10) / 10,
-        strengths: ['Completed the full assessment'],
-        weaknesses: ['Review areas with low scores'],
-        suggestions: ['Study the compliance documentation'],
+        strengths: ['Finished training interview session'],
+        weaknesses: ['Review safety guidelines details'],
+        suggestions: ['Practice regulations compliance frequently'],
         answers,
       });
     } finally {
@@ -188,7 +188,6 @@ export default function Interview() {
     }
   };
 
-  // ── Reset interview ─────────────────────────────────────────────────────
   const reset = () => {
     setPhase(PHASES.SETUP);
     setQuestions([]);
@@ -200,48 +199,43 @@ export default function Interview() {
     setError(null);
   };
 
-  // ── Score color ─────────────────────────────────────────────────────────
-  const getOverallColor = (s) =>
-    s >= 7 ? 'text-emerald-600' : s >= 5 ? 'text-amber-600' : 'text-red-600';
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // RENDER PHASES
-  // ──────────────────────────────────────────────────────────────────────────
-
   return (
-    <div className="max-w-3xl mx-auto px-4 py-10">
-
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="max-w-3xl mx-auto px-4 py-16 space-y-8"
+    >
       {/* Header */}
-      <div className="mb-8 text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary-50 text-primary-700 text-xs font-semibold rounded-full mb-4 border border-primary-100">
+      <div className="text-center space-y-3">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary-50 text-primary-700 text-xs font-semibold rounded-full border border-primary-100 shadow-sm">
           <Mic className="w-3.5 h-3.5" />
-          Voice Assessment
+          Interactive Assessment
         </div>
-        <h1 className="text-2xl font-bold text-surface-900">Compliance Interview</h1>
-        <p className="text-surface-500 text-sm mt-1">
-          Answer 5 AI-generated questions to assess your compliance knowledge.
+        <h1 className="text-3xl font-black tracking-tight text-surface-900">Compliance Voice Interview</h1>
+        <p className="text-surface-500 text-sm max-w-md mx-auto">
+          Assess your understanding of safety protocols through a 5-question mock verbal training session.
         </p>
       </div>
 
-      {error && (
-        <div className="mb-6">
-          <ErrorAlert message={error} type="error" onDismiss={() => setError(null)} />
-        </div>
-      )}
+      {error && <ErrorAlert message={error} type="error" onDismiss={() => setError(null)} />}
 
       {/* ── SETUP PHASE ── */}
       {phase === PHASES.SETUP && (
-        <div className="card">
-          <h2 className="text-base font-semibold text-surface-800 mb-5">Configure Interview</h2>
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="card p-8 bg-white border border-surface-200 rounded-3xl shadow-sm space-y-6"
+        >
+          <span className="text-xs font-bold text-surface-400 uppercase tracking-widest">Configuration</span>
 
-          <div className="mb-6">
-            <label className="block text-xs font-medium text-surface-500 mb-2">
-              Compliance Standard
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-surface-500 uppercase tracking-wider">
+              Target Standard
             </label>
             <select
               value={standard}
               onChange={(e) => setStandard(e.target.value)}
-              className="select"
+              className="select bg-surface-50 border-surface-200 text-sm font-medium py-3 rounded-xl focus:ring-glow"
               id="interview-standard"
             >
               {STANDARDS.map((s) => (
@@ -250,61 +244,62 @@ export default function Interview() {
             </select>
           </div>
 
-          <div className="bg-primary-50 rounded-xl p-4 mb-6 text-sm text-primary-700">
-            <p className="font-medium mb-2">📋 How it works:</p>
-            <ol className="space-y-1.5 list-decimal list-inside text-primary-600">
-              <li>Gemini generates 5 questions about {standard}</li>
-              <li>Click the mic button and speak your answer</li>
-              <li>AI evaluates your response and gives feedback</li>
-              <li>Complete all 5 for your final assessment</li>
+          <div className="bg-primary-50/50 border border-primary-100 rounded-2xl p-5 text-sm text-primary-850 space-y-3">
+            <p className="font-bold flex items-center gap-1.5 text-primary-750">
+              <Sparkles className="w-4 h-4 text-primary-600 fill-primary-100" /> Assessment Flow
+            </p>
+            <ol className="space-y-2 text-xs font-medium text-primary-600 list-decimal list-inside leading-relaxed">
+              <li>Gemini generates 5 tailored questions for {standard}.</li>
+              <li>Activate the microphone, formulate your response, and submit.</li>
+              <li>The engine evaluates your explanation and gives a constructive grade.</li>
             </ol>
           </div>
 
           <button
             onClick={startInterview}
             disabled={loading}
-            className="btn-primary w-full justify-center py-3.5"
+            className="w-full btn-primary justify-center py-4 rounded-xl font-bold tracking-wide relative overflow-hidden group shadow-lg hover:shadow-primary-500/20 active:scale-[0.99] transition-transform"
             id="start-interview-btn"
           >
             {loading ? (
-              <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Generating Questions...</>
+              <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Generating Assessment...</>
             ) : (
-              <><Mic className="w-5 h-5" /> Start Interview</>
+              <><Volume2 className="w-5 h-5" /> Start Assessment</>
             )}
           </button>
-        </div>
+        </motion.div>
       )}
 
-      {/* ── QUESTION PHASE ── */}
+      {/* ── QUESTION PHASE / RECORDING ── */}
       {(phase === PHASES.QUESTION || phase === PHASES.RECORDING) && currentQuestion && (
-        <div className="space-y-5">
+        <div className="space-y-6">
           {/* Progress */}
           <div className="flex items-center gap-3">
-            <span className="text-xs font-medium text-surface-500">
+            <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest min-w-[90px]">
               Question {currentIdx + 1} of {totalQuestions}
             </span>
-            <div className="flex-1 h-2 bg-surface-100 rounded-full overflow-hidden">
+            <div className="flex-grow h-1.5 bg-surface-100 rounded-full overflow-hidden">
               <div
-                className="h-2 bg-primary-500 rounded-full transition-all duration-500"
-                style={{ width: `${((currentIdx) / totalQuestions) * 100}%` }}
+                className="h-full bg-primary-500 rounded-full transition-all duration-500"
+                style={{ width: `${(currentIdx / totalQuestions) * 100}%` }}
               />
             </div>
           </div>
 
-          {/* Question Card */}
-          <div className="card border-primary-100 bg-primary-50/50">
-            <span className="text-xs font-bold text-primary-500 uppercase tracking-wider">
-              Question {currentIdx + 1}
-            </span>
-            <p className="mt-3 text-lg font-semibold text-surface-900 leading-relaxed">
-              {currentQuestion}
-            </p>
-          </div>
+          {/* Question card */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="card p-8 bg-gradient-to-tr from-surface-50 to-white border border-surface-200 rounded-3xl shadow-sm space-y-3"
+          >
+            <span className="text-[10px] font-bold text-primary-500 uppercase tracking-widest">Question prompt</span>
+            <h2 className="text-xl font-bold text-surface-900 leading-snug">{currentQuestion}</h2>
+          </motion.div>
 
-          {/* Mic */}
-          <div className="card flex flex-col items-center gap-5">
-            <p className="text-sm text-surface-500 text-center">
-              Click the microphone, speak your answer, then click again to stop.
+          {/* Voice recorder card */}
+          <div className="card p-8 bg-white border border-surface-200 rounded-3xl shadow-sm flex flex-col items-center gap-6">
+            <p className="text-xs text-surface-500 text-center font-medium max-w-sm">
+              Click the microphone, formulate your response, and click again to transcribe.
             </p>
             <MicButton
               onTranscript={handleTranscript}
@@ -313,27 +308,34 @@ export default function Interview() {
             />
 
             {transcript && (
-              <div className="w-full">
-                <p className="section-label">Your Answer (transcript)</p>
-                <div className="bg-surface-50 border border-surface-200 rounded-xl p-4 text-sm text-surface-700 leading-relaxed">
-                  {transcript}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="w-full space-y-4 pt-4 border-t border-surface-100"
+              >
+                <div>
+                  <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest">Transcribed Response</span>
+                  <div className="mt-2.5 p-4 bg-surface-50 border border-surface-200 rounded-2xl text-sm text-surface-700 leading-relaxed italic">
+                    "{transcript}"
+                  </div>
                 </div>
-                <div className="mt-3 flex gap-3 justify-end">
+
+                <div className="flex justify-end gap-3">
                   <button
-                    onClick={() => { setTranscript(''); }}
-                    className="btn-secondary text-xs py-2"
+                    onClick={() => setTranscript('')}
+                    className="btn-secondary rounded-xl text-xs py-2 px-4"
                   >
-                    <RotateCcw className="w-3.5 h-3.5" /> Re-record
+                    <RotateCcw className="w-3.5 h-3.5" /> Reset
                   </button>
                   <button
                     onClick={handleEvaluate}
-                    className="btn-primary text-xs py-2"
+                    className="btn-primary rounded-xl text-xs py-2 px-4"
                     id="submit-answer-btn"
                   >
                     Submit Answer <ChevronRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
-              </div>
+              </motion.div>
             )}
           </div>
         </div>
@@ -341,59 +343,56 @@ export default function Interview() {
 
       {/* ── EVALUATING ── */}
       {phase === PHASES.EVALUATING && (
-        <LoadingSpinner message="AI is evaluating your answer..." />
+        <LoadingSpinner message="Evaluating compliance knowledge..." />
       )}
 
-      {/* ── FEEDBACK PHASE ── */}
+      {/* ── FEEDBACK VIEW ── */}
       {phase === PHASES.FEEDBACK && evaluation && (
-        <div className="space-y-5">
+        <div className="space-y-6">
           {/* Progress */}
           <div className="flex items-center gap-3">
-            <span className="text-xs font-medium text-surface-500">
+            <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest min-w-[90px]">
               Question {currentIdx + 1} of {totalQuestions}
             </span>
-            <div className="flex-1 h-2 bg-surface-100 rounded-full overflow-hidden">
+            <div className="flex-grow h-1.5 bg-surface-100 rounded-full overflow-hidden">
               <div
-                className="h-2 bg-primary-500 rounded-full transition-all"
+                className="h-full bg-primary-500 rounded-full transition-all"
                 style={{ width: `${((currentIdx + 1) / totalQuestions) * 100}%` }}
               />
             </div>
           </div>
 
-          {/* Score */}
-          <div className="card border-0 bg-gradient-to-br from-surface-800 to-surface-900 text-white">
-            <div className="flex items-center gap-5">
-              <ScoreRing score={evaluation.score} />
-              <div className="flex-1">
-                <p className="text-sm text-white/60 mb-1">Answer Score</p>
-                <ScoreStars score={evaluation.score} />
-                <p className="text-xs text-white/50 mt-1">
-                  {evaluation.score >= 8 ? 'Excellent!' : evaluation.score >= 6 ? 'Good answer' : evaluation.score >= 4 ? 'Needs improvement' : 'Study this topic further'}
-                </p>
-              </div>
+          {/* Assessment Score */}
+          <div className="card p-6 bg-white border border-surface-200 rounded-3xl shadow-sm flex items-center gap-6">
+            <ScoreRing score={evaluation.score} />
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest">Question Score</span>
+              <ScoreStars score={evaluation.score} />
+              <p className="text-[10px] font-semibold text-surface-500">
+                {evaluation.score >= 8 ? 'Excellent Understanding' : evaluation.score >= 6 ? 'Good Knowledge' : 'Requires Training'}
+              </p>
             </div>
           </div>
 
-          {/* Feedback */}
-          <div className="card">
-            <p className="section-label">AI Feedback</p>
-            <p className="text-sm text-surface-700 leading-relaxed">{evaluation.feedback}</p>
+          {/* Feedback details */}
+          <div className="card p-8 bg-white border border-surface-200 rounded-3xl shadow-sm space-y-3">
+            <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest">AI Examiner Feedback</span>
+            <p className="text-sm text-surface-600 leading-relaxed">{evaluation.feedback}</p>
           </div>
 
-          {/* Your Answer */}
-          <div className="card bg-surface-50">
-            <p className="section-label">Your Answer</p>
-            <p className="text-sm text-surface-600 leading-relaxed italic">"{transcript}"</p>
+          {/* User's spoken answer */}
+          <div className="card p-6 bg-surface-50/50 border border-surface-200 rounded-2xl">
+            <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest">Your Transcript</span>
+            <p className="text-xs text-surface-500 italic mt-2 leading-relaxed">"{transcript}"</p>
           </div>
 
-          {/* Next Button */}
           <button
             onClick={handleNext}
-            className="btn-primary w-full justify-center py-3.5"
+            className="w-full btn-primary justify-center py-4 rounded-xl font-bold tracking-wide"
             id="next-question-btn"
           >
             {currentIdx + 1 >= totalQuestions ? (
-              <><Trophy className="w-4 h-4" /> Finish Interview</>
+              <><Trophy className="w-4 h-4" /> View Performance Report</>
             ) : (
               <>Next Question <ChevronRight className="w-4 h-4" /></>
             )}
@@ -401,76 +400,79 @@ export default function Interview() {
         </div>
       )}
 
-      {/* ── COMPLETE PHASE ── */}
+      {/* ── COMPLETE PERFORMANCE REPORT ── */}
       {phase === PHASES.COMPLETE && (
         loading ? (
-          <LoadingSpinner message="Generating your final assessment..." />
+          <LoadingSpinner message="Compiling overall performance report..." />
         ) : finalResult && (
-          <div className="space-y-6">
-            {/* Overall Score */}
-            <div className="card bg-gradient-to-br from-primary-600 to-primary-800 text-white border-0 text-center py-10">
-              <Trophy className="w-12 h-12 mx-auto mb-4 text-amber-300" />
-              <h2 className="text-2xl font-bold mb-1">Interview Complete!</h2>
-              <p className="text-primary-200 text-sm mb-6">{finalResult.standard}</p>
-              <div className={`text-7xl font-bold tabular-nums mb-2 ${
-                finalResult.overall_score >= 7 ? 'text-emerald-300' :
-                finalResult.overall_score >= 5 ? 'text-amber-300' : 'text-red-300'
-              }`}>
-                {finalResult.overall_score.toFixed(1)}
+          <div className="space-y-8">
+            {/* Header score */}
+            <div className="card p-8 bg-gradient-to-tr from-surface-900 to-surface-800 text-white rounded-3xl shadow-xl text-center space-y-4 border-0 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary-500/10 to-transparent pointer-events-none" />
+              <Trophy className="w-12 h-12 mx-auto text-amber-300 fill-amber-300" />
+              <div>
+                <h2 className="text-xl font-black">Voice Assessment Complete</h2>
+                <p className="text-xs text-white/60 mt-1">{finalResult.standard}</p>
               </div>
-              <p className="text-primary-200 text-sm">Overall Score (out of 10)</p>
+
+              <div className="py-2">
+                <div className={`text-6xl font-black tracking-tight tabular-nums ${
+                  finalResult.overall_score >= 7 ? 'text-emerald-400' :
+                  finalResult.overall_score >= 5 ? 'text-amber-400' : 'text-red-400'
+                }`}>
+                  {finalResult.overall_score.toFixed(1)}
+                </div>
+                <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Overall Score / 10</span>
+              </div>
             </div>
 
-            {/* Per-question breakdown */}
-            <div className="card">
-              <p className="section-label">Question Breakdown</p>
-              <div className="space-y-3">
+            {/* Split layout: Question details */}
+            <div className="card p-8 bg-white border border-surface-200 rounded-3xl shadow-sm space-y-6">
+              <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest">Question Breakdown</span>
+              <div className="h-px bg-surface-100" />
+              <div className="space-y-4">
                 {answers.map((a, i) => (
-                  <div key={i} className="flex items-start gap-3 p-3 bg-surface-50 rounded-xl border border-surface-100">
-                    <div className="w-7 h-7 rounded-full bg-primary-100 text-primary-700 text-xs font-bold flex items-center justify-center flex-shrink-0">
-                      {i + 1}
+                  <div key={i} className="p-4 bg-surface-50 border border-surface-200/60 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="space-y-1 max-w-md">
+                      <p className="text-xs font-bold text-surface-900 truncate">{a.question}</p>
+                      <p className="text-[10px] text-surface-400 italic truncate">"{a.answer}"</p>
+                      <p className="text-[10px] text-surface-500 line-clamp-1">{a.feedback}</p>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-surface-700 mb-0.5 line-clamp-2">{a.question}</p>
-                      <p className="text-xs text-surface-400 mb-2 line-clamp-1 italic">{a.answer}</p>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                          a.score >= 7 ? 'bg-emerald-100 text-emerald-700' :
-                          a.score >= 5 ? 'bg-amber-100 text-amber-700' :
-                          'bg-red-100 text-red-700'
-                        }`}>{a.score}/10</span>
-                        <p className="text-xs text-surface-500 truncate">{a.feedback}</p>
-                      </div>
-                    </div>
+                    <span className={`self-start sm:self-center text-xs font-bold px-3 py-1 rounded-full ${
+                      a.score >= 7 ? 'bg-emerald-100 text-emerald-700' :
+                      a.score >= 5 ? 'bg-amber-100 text-amber-700' :
+                      'bg-red-100 text-red-700'
+                    }`}>
+                      {a.score}/10
+                    </span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Strengths */}
+            {/* Strengths & Weaknesses (AI recommendations breakdown) */}
             {finalResult.strengths?.length > 0 && (
-              <div className="card bg-emerald-50 border-emerald-100">
-                <p className="section-label text-emerald-600">Strengths</p>
-                <ul className="space-y-2">
-                  {finalResult.strengths.map((s, i) => (
-                    <li key={i} className="flex gap-2 text-sm text-emerald-800">
-                      <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
-                      {s}
+              <div className="card p-6 bg-emerald-50/50 border border-emerald-100 rounded-2xl space-y-4">
+                <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">Strengths Demarcated</span>
+                <ul className="space-y-3">
+                  {finalResult.strengths.map((s, idx) => (
+                    <li key={idx} className="flex gap-2.5 text-xs font-medium text-emerald-950">
+                      <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                      <span>{s}</span>
                     </li>
                   ))}
                 </ul>
               </div>
             )}
 
-            {/* Weaknesses */}
             {finalResult.weaknesses?.length > 0 && (
-              <div className="card bg-red-50 border-red-100">
-                <p className="section-label text-red-600">Areas for Improvement</p>
-                <ul className="space-y-2">
-                  {finalResult.weaknesses.map((w, i) => (
-                    <li key={i} className="flex gap-2 text-sm text-red-800">
-                      <XCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-                      {w}
+              <div className="card p-6 bg-red-50/50 border border-red-100 rounded-2xl space-y-4">
+                <span className="text-[10px] font-bold text-red-700 uppercase tracking-widest">Improvement Targets</span>
+                <ul className="space-y-3">
+                  {finalResult.weaknesses.map((w, idx) => (
+                    <li key={idx} className="flex gap-2.5 text-xs font-medium text-red-950">
+                      <ShieldAlert className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                      <span>{w}</span>
                     </li>
                   ))}
                 </ul>
@@ -479,26 +481,26 @@ export default function Interview() {
 
             {/* Suggestions */}
             {finalResult.suggestions?.length > 0 && (
-              <div className="card bg-amber-50 border-amber-100">
-                <p className="section-label text-amber-600">Suggestions</p>
-                <ul className="space-y-2">
-                  {finalResult.suggestions.map((s, i) => (
-                    <li key={i} className="flex gap-2 text-sm text-amber-800">
-                      <Lightbulb className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
-                      {s}
+              <div className="card p-6 bg-amber-50/50 border border-amber-100 rounded-2xl space-y-4">
+                <span className="text-[10px] font-bold text-amber-700 uppercase tracking-widest">Development Action Items</span>
+                <ul className="space-y-3">
+                  {finalResult.suggestions.map((s, idx) => (
+                    <li key={idx} className="flex gap-2.5 text-xs font-medium text-amber-950">
+                      <Sparkles className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                      <span>{s}</span>
                     </li>
                   ))}
                 </ul>
               </div>
             )}
 
-            {/* Reset */}
-            <button onClick={reset} className="btn-secondary w-full justify-center">
-              <RotateCcw className="w-4 h-4" /> Take Another Interview
+            {/* Restart button */}
+            <button onClick={reset} className="btn-secondary w-full py-4 rounded-xl font-bold justify-center shadow-sm">
+              <RotateCcw className="w-4 h-4" /> Start Another Assessment Session
             </button>
           </div>
         )
       )}
-    </div>
+    </motion.div>
   );
 }

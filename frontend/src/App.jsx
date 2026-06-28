@@ -33,20 +33,25 @@ function Toast() {
 }
 
 // ── Layout ────────────────────────────────────────────────────────────────────
+import Footer from './components/Footer';
+
 function Layout() {
   return (
-    <div className="min-h-screen bg-surface-50">
-      <Navbar />
-      <main>
-        <Routes>
-          <Route path="/"          element={<Home />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/history"   element={<History />} />
-          <Route path="/interview" element={<Interview />} />
-          {/* Catch-all → Home */}
-          <Route path="*"          element={<Home />} />
-        </Routes>
-      </main>
+    <div className="min-h-screen bg-surface-50 flex flex-col justify-between">
+      <div>
+        <Navbar />
+        <main className="py-8">
+          <Routes>
+            <Route path="/"          element={<Home />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/history"   element={<History />} />
+            <Route path="/interview" element={<Interview />} />
+            {/* Catch-all → Home */}
+            <Route path="*"          element={<Home />} />
+          </Routes>
+        </main>
+      </div>
+      <Footer />
       <Toast />
     </div>
   );

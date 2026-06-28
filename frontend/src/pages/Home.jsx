@@ -1,6 +1,8 @@
 import { useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, ImageIcon, X, ShieldCheck, Zap, AlertCircle, CheckCircle2, ChevronRight, FileText, RefreshCw, Trash2 } from 'lucide-react';
+import { Upload, ImageIcon, X, ShieldCheck, Zap, AlertCircle, CheckCircle2, ChevronRight, FileText, RefreshCw, Trash2, Download, Copy, Share2 } from 'lucide-react';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import CircularScore from '../components/CircularScore';
 import IssueCard from '../components/IssueCard';
 import RecommendationList from '../components/RecommendationList';
@@ -164,6 +166,49 @@ export default function Home() {
       setError(err.message || 'Analysis failed. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ── UX Actions ────────────────────────────────────────────────────────────
+  const handleDownloadPDF = async () => {
+    if (!resultRef.current) return;
+    try {
+      const canvas = await html2canvas(resultRef.current, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`VisionAI-Report-${new Date().toISOString().split('T')[0]}.pdf`);
+      showToast('PDF downloaded successfully!', 'success');
+    } catch (err) {
+      showToast('Failed to generate PDF', 'error');
+    }
+  };
+
+  const handleCopyReport = () => {
+    if (!result) return;
+    const text = `VisionAI Inspection Report\nStandard: ${standard}\nScore: ${result.score}/100\n\nSummary:\n${result.summary}\n\nIssues Found: ${result.issues?.length || 0}\n\nRecommendations:\n${result.recommendations?.join('\n') || 'None'}`;
+    navigator.clipboard.writeText(text);
+    showToast('Report copied to clipboard!', 'success');
+  };
+
+  const handleShare = async () => {
+    if (!result) return;
+    const text = `I just ran a VisionAI compliance inspection for ${standard} and scored ${result.score}/100!`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'VisionAI Inspection Report',
+          text: text,
+          url: window.location.href,
+        });
+      } catch (err) {
+        if (err.name !== 'AbortError') showToast('Failed to share', 'error');
+      }
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      showToast('Link copied to clipboard!', 'success');
     }
   };
 
@@ -543,8 +588,8 @@ export default function Home() {
               </div>
             )}
 
-            {/* NEW ANALYSIS BUTTON AT THE BOTTOM */}
-            <div className="pt-8 flex justify-center">
+            {/* ACTION BUTTONS */}
+            <div className="pt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
               <button
                 onClick={handleNewAnalysis}
                 className="btn-primary px-8 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-450 border border-blue-400/20 text-white font-bold shadow-xl shadow-blue-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-3 text-lg"
@@ -552,6 +597,30 @@ export default function Home() {
                 <RefreshCw className="w-5 h-5" />
                 🔄 New Analysis
               </button>
+              
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleDownloadPDF}
+                  className="btn-secondary px-4 py-3 rounded-2xl flex items-center gap-2 hover:bg-surface-100 dark:hover:bg-white/10 transition-colors"
+                  title="Download PDF Report"
+                >
+                  <Download className="w-4 h-4" /> <span className="hidden sm:inline">Download</span>
+                </button>
+                <button
+                  onClick={handleCopyReport}
+                  className="btn-secondary px-4 py-3 rounded-2xl flex items-center gap-2 hover:bg-surface-100 dark:hover:bg-white/10 transition-colors"
+                  title="Copy AI Report Text"
+                >
+                  <Copy className="w-4 h-4" /> <span className="hidden sm:inline">Copy</span>
+                </button>
+                <button
+                  onClick={handleShare}
+                  className="btn-secondary px-4 py-3 rounded-2xl flex items-center gap-2 hover:bg-surface-100 dark:hover:bg-white/10 transition-colors"
+                  title="Share Report"
+                >
+                  <Share2 className="w-4 h-4" /> <span className="hidden sm:inline">Share</span>
+                </button>
+              </div>
             </div>
 
           </motion.section>

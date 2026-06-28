@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldCheck, Eye, Mic, Sun, Moon } from 'lucide-react';
+import { ShieldCheck, Eye, Mic, Sun, Moon, LayoutDashboard } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 
 export default function Navbar() {
@@ -53,6 +53,7 @@ export default function Navbar() {
         <div className="flex items-center bg-white dark:bg-[#0b1220]/[0.04] border border-white/[0.06] p-1 rounded-2xl">
           {[
             { to: '/', label: 'Inspection', icon: Eye },
+            { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
             { to: '/interview', label: 'Interview', icon: Mic }
           ].map((item) => {
             const isActive = pathname === item.to;

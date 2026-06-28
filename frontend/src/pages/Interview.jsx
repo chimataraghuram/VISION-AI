@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Mic, ChevronRight, Trophy, RotateCcw, Star,
@@ -7,7 +7,8 @@ import {
 import MicButton from '../components/MicButton';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorAlert from '../components/ErrorAlert';
-import { getInterviewQuestions, evaluateAnswer, saveInterviewResult } from '../services/api';
+import { getInterviewQuestions, evaluateAnswer, saveInterviewResult, getHistory } from '../services/api';
+import { useApp } from '../contexts/AppContext';
 
 const STANDARDS = [
   { value: 'General Safety',     label: '🛡️ General Safety' },
@@ -76,6 +77,8 @@ function ScoreRing({ score, max = 10 }) {
 }
 
 export default function Interview() {
+  const { currentReport } = useApp();
+  const [latestReport, setLatestReport] = useState(null);
   const [standard, setStandard]     = useState('General Safety');
   const [phase, setPhase]           = useState(PHASES.SETUP);
   const [questions, setQuestions]   = useState([]);
@@ -90,12 +93,28 @@ export default function Interview() {
   const currentQuestion = questions[currentIdx];
   const totalQuestions  = 5;
 
+  useEffect(() => {
+    if (currentReport) {
+      setLatestReport(currentReport);
+    } else {
+      getHistory(1, 1).then(res => {
+        if (res.reports && res.reports.length > 0) {
+          setLatestReport(res.reports[0]);
+        }
+      }).catch(err => console.error("Could not fetch latest report", err));
+    }
+  }, [currentReport]);
+
   // ── Step 1: Generate Questions ────────────────────────────────────────────
   const startInterview = async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getInterviewQuestions(standard);
+      let contextStandard = standard;
+      if (latestReport) {
+        contextStandard = `${standard}. (Context: The user's last inspection scored ${latestReport.score}/100. Focus on improving their weak areas related to this score and recent safety findings.)`;
+      }
+      const data = await getInterviewQuestions(contextStandard);
       setQuestions(data.questions);
       setCurrentIdx(0);
       setAnswers([]);
@@ -173,18 +192,37 @@ export default function Interview() {
         answers,
       });
       setFinalResult(saved);
+      // Save locally for dashboard
+      saveToLocal(saved);
     } catch (err) {
       const avgScore = answers.reduce((s, a) => s + a.score, 0) / answers.length;
-      setFinalResult({
+      const fallbackResult = {
         standard,
         overall_score: Math.round(avgScore * 10) / 10,
         strengths: ['Finished training interview session'],
         weaknesses: ['Review safety guidelines details'],
         suggestions: ['Practice regulations compliance frequently'],
         answers,
-      });
+      };
+      setFinalResult(fallbackResult);
+      // Save locally for dashboard
+      saveToLocal(fallbackResult);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const saveToLocal = (result) => {
+    try {
+      const existing = localStorage.getItem('visionai_interviews');
+      const interviews = existing ? JSON.parse(existing) : [];
+      interviews.push({
+        ...result,
+        date: result.date || new Date().toISOString()
+      });
+      localStorage.setItem('visionai_interviews', JSON.stringify(interviews));
+    } catch (e) {
+      console.warn("Could not save to localStorage", e);
     }
   };
 

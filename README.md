@@ -171,25 +171,9 @@ npm install
 npm run dev
 ```
 
----
-
-# 🔑 Environment Variables
-
-Backend (`backend/.env`)
-
-```env
-GEMINI_API_KEY=YOUR_GEMINI_API_KEY
-
-DATABASE_URL=sqlite:///visionai.db
-```
-
-Frontend (`frontend/.env`)
-
-```env
-VITE_API_URL=http://localhost:8000
-```
 
 ---
+
 
 # 🌐 API Endpoints
 

@@ -6,6 +6,12 @@
 
 ---
 
+## 🔴 Live Demo
+
+* [**Experience VisionAI Live Here**](https://vision-ai-seven-gamma.vercel.app/) *(Update this link if needed)*
+
+---
+
 ## 🚀 Project Overview
 
 VisionAI was developed as a technical assessment to demonstrate end-to-end AI application development using modern Full Stack technologies and Generative AI.
@@ -172,38 +178,7 @@ npm run dev
 ```
 
 
----
 
-
-# 🌐 API Endpoints
-
-## Compliance
-
-| Method | Endpoint     | Description            |
-| ------ | ------------ | ---------------------- |
-| POST   | /api/analyze | Analyze uploaded image |
-
----
-
-## Voice Interview
-
-| Method | Endpoint            | Description                  |
-| ------ | ------------------- | ---------------------------- |
-| POST   | /api/questions      | Generate interview questions |
-| POST   | /api/evaluate       | Evaluate user answer         |
-| POST   | /api/interview/save | Save interview result        |
-
----
-
-## Reports
-
-| Method | Endpoint          | Description                 |
-| ------ | ----------------- | --------------------------- |
-| GET    | /api/history      | Retrieve inspection history |
-| GET    | /api/history/{id} | Retrieve specific report    |
-| GET    | /api/dashboard    | Dashboard statistics        |
-
----
 
 # 🎤 Voice Interview
 
@@ -277,6 +252,10 @@ http://localhost:8000/docs
 ---
 
 # 👨‍💻 Developer
+
+**CHIMATA RAGHURAM**
+* [LinkedIn](https://www.linkedin.com/in/chimataraghuram/)
+* [GitHub](https://github.com/chimataraghuram)
 
 Developed as an AI Full Stack Engineering technical assessment.
 

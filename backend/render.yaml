@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: visionai-backend
+    env: python
+    region: oregon
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false  # Set manually in Render dashboard
+      - key: DATABASE_URL
+        value: sqlite:///./visionai.db
+      - key: FRONTEND_URL
+        sync: false  # Set to your Vercel frontend URL
+    healthCheckPath: /health

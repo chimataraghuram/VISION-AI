@@ -32,6 +32,10 @@
       "dest": "frontend/assets/$1"
     },
     {
+      "src": "/demo-images/(.*)",
+      "dest": "frontend/demo-images/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "frontend/index.html"
     }

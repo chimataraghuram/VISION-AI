@@ -78,9 +78,6 @@ async def analyze_image(image_bytes: bytes, standard: str) -> Dict[str, Any]:
     Returns:
         Dict with keys: score, summary, issues, recommendations
     """
-    # Convert bytes to PIL Image for Gemini
-    pil_image = Image.open(io.BytesIO(image_bytes))
-
     prompt = f"""You are a certified compliance auditor with expertise in workplace and facility safety regulations.
 
 Analyze the provided image according to the **{standard}** compliance standard.
@@ -116,6 +113,9 @@ If the image shows excellent compliance, issues array may be empty and score sho
 Provide at least 3 recommendations regardless of score."""
 
     try:
+        # Convert bytes to PIL Image for Gemini
+        pil_image = Image.open(io.BytesIO(image_bytes))
+        
         response = model.generate_content([prompt, pil_image])
         result = _extract_json(response.text)
 

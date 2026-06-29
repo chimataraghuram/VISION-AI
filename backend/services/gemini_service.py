@@ -289,6 +289,10 @@ Based on all answers, provide a comprehensive performance summary.
 
 Return ONLY valid JSON:
 {{
+  "knowledge_rating": "<integer 1-10>",
+  "communication_rating": "<integer 1-10>",
+  "reasoning_rating": "<integer 1-10>",
+  "confidence_rating": "<integer 1-10>",
   "overall_performance_summary": "<A comprehensive summary paragraph>",
   "strengths": [
     "<specific strength demonstrated in the interview>",
@@ -298,8 +302,6 @@ Return ONLY valid JSON:
     "<specific knowledge gap or weakness>",
     "<another weakness>"
   ],
-  "knowledge_level": "<'Beginner', 'Intermediate', or 'Advanced'>",
-  "confidence_level": "<'Low', 'Medium', or 'High'>",
   "recommended_learning_topics": [
     "<training recommendation 1>",
     "<training recommendation 2>"
@@ -313,8 +315,10 @@ Return ONLY valid JSON:
         # Package the new extended fields into the suggestions array as a JSON string to fit existing DB schema
         suggestions_payload = {
             "overall_performance_summary": result.get("overall_performance_summary", "Assessment complete."),
-            "knowledge_level": result.get("knowledge_level", "Intermediate"),
-            "confidence_level": result.get("confidence_level", "Medium"),
+            "knowledge_rating": result.get("knowledge_rating", 5),
+            "communication_rating": result.get("communication_rating", 5),
+            "reasoning_rating": result.get("reasoning_rating", 5),
+            "confidence_rating": result.get("confidence_rating", 5),
             "recommended_learning_topics": result.get("recommended_learning_topics", [])
         }
 
@@ -329,8 +333,10 @@ Return ONLY valid JSON:
         # Return graceful fallback
         suggestions_payload = {
             "overall_performance_summary": "Could not generate detailed analysis",
-            "knowledge_level": "Unknown",
-            "confidence_level": "Unknown",
+            "knowledge_rating": 5,
+            "communication_rating": 5,
+            "reasoning_rating": 5,
+            "confidence_rating": 5,
             "recommended_learning_topics": ["Review compliance documentation"]
         }
         return {

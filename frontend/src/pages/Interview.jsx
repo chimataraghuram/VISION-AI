@@ -2,10 +2,9 @@ import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Mic, ChevronRight, Trophy, RotateCcw, Star,
-  Volume2, ShieldAlert, Sparkles, CheckCircle, BrainCircuit, Target, Lightbulb
+  Volume2, ShieldAlert, Sparkles, CheckCircle, BrainCircuit, Target, Lightbulb, AlertTriangle, Play
 } from 'lucide-react';
 import MicButton from '../components/MicButton';
-import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorAlert from '../components/ErrorAlert';
 import { getInterviewQuestions, evaluateAnswer, saveInterviewResult, getHistory } from '../services/api';
 import { useApp } from '../contexts/AppContext';
@@ -25,23 +24,11 @@ const PHASES = {
   RECORDING:  'recording',
   EVALUATING: 'evaluating',
   FEEDBACK:   'feedback',
+  ERROR:      'error',
   COMPLETE:   'complete',
 };
 
-function ScoreStars({ score }) {
-  return (
-    <div className="flex gap-1">
-      {[...Array(10)].map((_, i) => (
-        <Star
-          key={i}
-          className={`w-4 h-4 transition-transform duration-300 hover:scale-110 ${
-            i < score ? 'text-amber-400 fill-amber-400' : 'text-surface-200'
-          }`}
-        />
-      ))}
-    </div>
-  );
-}
+// ── Components ─────────────────────────────────────────────────────────────
 
 function ScoreRing({ score, max = 10 }) {
   const pct = (score / max) * 100;
@@ -51,30 +38,79 @@ function ScoreRing({ score, max = 10 }) {
   const color = score >= 7 ? '#16a34a' : score >= 5 ? '#f59e0b' : '#ef4444';
 
   return (
-    <div className="relative w-20 h-20">
-      <svg width="80" height="80" className="-rotate-90">
-        <circle cx="40" cy="40" r={radius} fill="none" stroke="#f1f5f9" strokeWidth={6} />
+    <div className="relative w-24 h-24">
+      <svg width="96" height="96" className="-rotate-90">
+        <circle cx="48" cy="48" r={radius} fill="none" stroke="#f1f5f9" strokeWidth={8} />
         <motion.circle
-          cx="40"
-          cy="40"
+          cx="48"
+          cy="48"
           r={radius}
           fill="none"
           stroke={color}
-          strokeWidth={6}
+          strokeWidth={8}
           strokeDasharray={circ}
           initial={{ strokeDashoffset: circ }}
           animate={{ strokeDashoffset: offset }}
-          transition={{ duration: 1, ease: 'easeOut' }}
+          transition={{ duration: 1.5, ease: 'easeOut' }}
           strokeLinecap="round"
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-xl font-bold tracking-tight" style={{ color }}>{score}</span>
-        <span className="text-[9px] text-surface-400">/{max}</span>
+        <span className="text-2xl font-black tracking-tight" style={{ color }}>{score}</span>
+        <span className="text-[10px] text-surface-400 font-bold">/ {max}</span>
       </div>
     </div>
   );
 }
+
+function ProgressSteps() {
+  const steps = [
+    "Processing speech",
+    "Understanding your response",
+    "Evaluating knowledge",
+    "Generating personalized feedback"
+  ];
+  
+  const [currentStep, setCurrentStep] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentStep(prev => (prev < steps.length - 1 ? prev + 1 : prev));
+    }, 1200);
+    return () => clearInterval(interval);
+  }, [steps.length]);
+
+  return (
+    <div className="space-y-4 w-full max-w-sm mx-auto">
+      {steps.map((step, idx) => {
+        const isPast = idx < currentStep;
+        const isCurrent = idx === currentStep;
+        return (
+          <motion.div
+            key={idx}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: isPast || isCurrent ? 1 : 0.3, x: 0 }}
+            className="flex items-center gap-3"
+          >
+            <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
+              isPast ? 'bg-emerald-500 text-white' : 
+              isCurrent ? 'bg-primary-500 text-white animate-pulse' : 'bg-surface-200 text-surface-400'
+            }`}>
+              {isPast ? <CheckCircle className="w-3.5 h-3.5" /> : (
+                isCurrent ? <div className="w-2 h-2 bg-white rounded-full animate-ping" /> : null
+              )}
+            </div>
+            <span className={`text-sm font-medium ${isCurrent ? 'text-primary-700 dark:text-primary-400 font-bold' : 'text-surface-600'}`}>
+              {step}
+            </span>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Main Page Component ───────────────────────────────────────────────────
 
 export default function Interview() {
   const { currentReport } = useApp();
@@ -153,7 +189,7 @@ export default function Interview() {
       ]);
     } catch (err) {
       setError(err.message);
-      setPhase(PHASES.QUESTION);
+      setPhase(PHASES.ERROR);
     }
   };
 
@@ -187,7 +223,7 @@ export default function Interview() {
       setFinalResult(saved);
       saveToLocal(saved);
     } catch (err) {
-      const avgScore = answers.reduce((s, a) => s + a.score, 0) / answers.length;
+      const avgScore = answers.reduce((s, a) => s + a.score, 0) / (answers.length || 1);
       const fallbackResult = {
         standard,
         overall_score: Math.round(avgScore * 10) / 10,
@@ -195,8 +231,10 @@ export default function Interview() {
         weaknesses: ['Review safety guidelines details'],
         suggestions: [JSON.stringify({
             overall_performance_summary: "Assessment complete. No detailed analysis could be generated.",
-            knowledge_level: "Unknown",
-            confidence_level: "Unknown",
+            knowledge_rating: 5,
+            communication_rating: 5,
+            reasoning_rating: 5,
+            confidence_rating: 5,
             recommended_learning_topics: ["Review compliance documentation"]
         })],
         answers,
@@ -234,8 +272,8 @@ export default function Interview() {
   };
 
   const getBadgeIcon = (badge) => {
-    if (badge === 'Excellent') return '🏆';
-    if (badge === 'Good') return '🥈';
+    if (badge === 'Excellent' || badge === 'High' || badge === 'Advanced') return '🏆';
+    if (badge === 'Good' || badge === 'Medium' || badge === 'Intermediate') return '🥈';
     return '🥉';
   };
 
@@ -267,292 +305,398 @@ export default function Interview() {
         </p>
       </div>
 
-      {error && <ErrorAlert message={error} type="error" onDismiss={() => setError(null)} />}
+      {error && phase !== PHASES.ERROR && <ErrorAlert message={error} type="error" onDismiss={() => setError(null)} />}
 
-      {phase === PHASES.SETUP && (
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="card max-w-3xl mx-auto space-y-6"
-        >
-          <span className="text-xs font-bold text-surface-400 uppercase tracking-widest">Configuration</span>
-          <div className="space-y-2">
-            <label className="block text-xs font-bold text-surface-500 uppercase tracking-wider">
-              Target Standard
-            </label>
-            <select
-              value={standard}
-              onChange={(e) => setStandard(e.target.value)}
-              className="select bg-surface-50 border-surface-200 text-sm font-medium py-3 rounded-xl focus:ring-glow"
-            >
-              {STANDARDS.map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </select>
-          </div>
-          <button
-            onClick={startInterview}
-            disabled={loading}
-            className="w-full btn-primary justify-center py-4 rounded-xl font-bold tracking-wide shadow-lg"
-          >
-            {loading ? (
-              <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Generating Assessment...</>
-            ) : (
-              <><Volume2 className="w-5 h-5" /> Start Assessment</>
-            )}
-          </button>
-        </motion.div>
-      )}
-
-      {(phase === PHASES.QUESTION || phase === PHASES.RECORDING) && currentQuestion && (
-        <div className="space-y-6 max-w-3xl mx-auto">
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest min-w-[90px]">
-              Question {currentIdx + 1} of {totalQuestions}
-            </span>
-            <div className="flex-grow h-1.5 bg-surface-100 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary-500 rounded-full transition-all duration-500"
-                style={{ width: `${(currentIdx / totalQuestions) * 100}%` }}
-              />
-            </div>
-          </div>
+      <AnimatePresence mode="wait">
+        {/* ── SETUP PHASE ── */}
+        {phase === PHASES.SETUP && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            key="setup"
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            className="card p-8 bg-gradient-to-tr from-surface-50 to-white border border-surface-200 rounded-3xl shadow-sm space-y-3"
+            exit={{ opacity: 0, y: -15 }}
+            className="card max-w-3xl mx-auto space-y-6"
           >
-            <span className="text-[10px] font-bold text-primary-500 uppercase tracking-widest">Question prompt</span>
-            <h2 className="text-xl font-bold text-surface-900 dark:text-white leading-snug">{currentQuestion}</h2>
-          </motion.div>
-
-          <div className="card flex flex-col items-center gap-6">
-            <p className="text-xs text-surface-500 text-center font-medium max-w-sm">
-              Click the microphone, formulate your response, and click again to transcribe.
-            </p>
-            <MicButton
-              onTranscript={handleTranscript}
-              onError={handleMicError}
-              disabled={loading}
-            />
-
-            {transcript && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="w-full space-y-4 pt-4 border-t border-surface-100"
+            <span className="text-xs font-bold text-surface-400 uppercase tracking-widest">Configuration</span>
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-surface-500 uppercase tracking-wider">
+                Target Standard
+              </label>
+              <select
+                value={standard}
+                onChange={(e) => setStandard(e.target.value)}
+                className="select bg-surface-50 border-surface-200 text-sm font-medium py-3 rounded-xl focus:ring-glow"
               >
-                <div>
-                  <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest">Transcribed Response</span>
-                  <div className="mt-2.5 p-4 bg-surface-50 border border-surface-200 rounded-2xl text-sm text-surface-700 leading-relaxed italic">
-                    "{transcript}"
-                  </div>
-                </div>
-                <div className="flex justify-end gap-3">
-                  <button onClick={() => setTranscript('')} className="btn-secondary rounded-xl text-xs py-2 px-4">
-                    <RotateCcw className="w-3.5 h-3.5" /> Reset
-                  </button>
-                  <button onClick={handleEvaluate} className="btn-primary rounded-xl text-xs py-2 px-4">
-                    Submit Answer <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {phase === PHASES.EVALUATING && (
-        <LoadingSpinner message="Evaluating compliance knowledge..." />
-      )}
-
-      {phase === PHASES.FEEDBACK && evaluation && (
-        <div className="space-y-6 max-w-3xl mx-auto">
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest min-w-[90px]">
-              Question {currentIdx + 1} of {totalQuestions}
-            </span>
-            <div className="flex-grow h-1.5 bg-surface-100 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary-500 rounded-full transition-all"
-                style={{ width: `${((currentIdx + 1) / totalQuestions) * 100}%` }}
-              />
+                {STANDARDS.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </select>
             </div>
-          </div>
+            <button
+              onClick={startInterview}
+              disabled={loading}
+              className="w-full btn-primary justify-center py-4 rounded-xl font-bold tracking-wide shadow-lg"
+            >
+              {loading ? (
+                <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Generating Assessment...</>
+              ) : (
+                <><Volume2 className="w-5 h-5" /> Start Assessment</>
+              )}
+            </button>
+          </motion.div>
+        )}
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card border-primary-200/50 shadow-md">
-            <div className="flex items-center gap-2 mb-6">
-              <BrainCircuit className="w-5 h-5 text-primary-500" />
-              <h3 className="font-bold text-surface-900 dark:text-white">AI Evaluation</h3>
+        {/* ── QUESTION / RECORDING PHASE ── */}
+        {(phase === PHASES.QUESTION || phase === PHASES.RECORDING) && currentQuestion && (
+          <motion.div
+            key="question"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            className="space-y-6 max-w-3xl mx-auto"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest min-w-[90px]">
+                Question {currentIdx + 1} of {totalQuestions}
+              </span>
+              <div className="flex-grow h-1.5 bg-surface-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary-500 rounded-full transition-all duration-500"
+                  style={{ width: `${(currentIdx / totalQuestions) * 100}%` }}
+                />
+              </div>
+            </div>
+            <div className="card p-8 bg-gradient-to-tr from-surface-50 to-white border border-surface-200 rounded-3xl shadow-sm space-y-3">
+              <span className="text-[10px] font-bold text-primary-500 uppercase tracking-widest">Question prompt</span>
+              <h2 className="text-xl font-bold text-surface-900 dark:text-white leading-snug">{currentQuestion}</h2>
+            </div>
+
+            <div className="card flex flex-col items-center gap-6">
+              <p className="text-xs text-surface-500 text-center font-medium max-w-sm">
+                Click the microphone, formulate your response, and click again to transcribe.
+              </p>
+              <MicButton
+                onTranscript={handleTranscript}
+                onError={handleMicError}
+                disabled={loading}
+              />
+
+              {transcript && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="w-full space-y-4 pt-4 border-t border-surface-100"
+                >
+                  <div>
+                    <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest">Transcribed Response</span>
+                    <div className="mt-2.5 p-4 bg-surface-50 border border-surface-200 rounded-2xl text-sm text-surface-700 leading-relaxed italic">
+                      "{transcript}"
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-3">
+                    <button onClick={() => setTranscript('')} className="btn-secondary rounded-xl text-xs py-2 px-4">
+                      <RotateCcw className="w-3.5 h-3.5" /> Reset
+                    </button>
+                    <button onClick={handleEvaluate} className="btn-primary rounded-xl text-xs py-2 px-4">
+                      Submit Answer <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── EVALUATING PHASE ── */}
+        {phase === PHASES.EVALUATING && (
+          <motion.div
+            key="evaluating"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="card max-w-md mx-auto flex flex-col items-center py-12 px-8 space-y-8 text-center"
+          >
+            <div className="relative">
+              <div className="w-20 h-20 bg-primary-50 rounded-full flex items-center justify-center animate-pulse">
+                <BrainCircuit className="w-10 h-10 text-primary-600" />
+              </div>
+              <div className="absolute -inset-2 rounded-full border-2 border-primary-500 border-t-transparent animate-spin" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-xl font-bold text-surface-900 dark:text-white">🤖 Evaluating Your Answer...</h2>
+              <p className="text-sm text-surface-500">Please wait while Gemini reviews your response.</p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 pb-6 border-b border-surface-100">
-              <div className="flex flex-col items-center justify-center space-y-2">
-                <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest">Overall Score</span>
-                <ScoreRing score={evaluation.score} />
-              </div>
-              <div className="flex flex-col items-center justify-center space-y-2">
-                <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest">Performance Badge</span>
-                <div className="text-3xl">{getBadgeIcon(evaluation.performance_badge)}</div>
-                <span className="text-sm font-bold text-surface-700">{evaluation.performance_badge}</span>
-              </div>
-              <div className="flex flex-col justify-center space-y-3">
-                <div>
-                  <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest block mb-1">Question Difficulty</span>
-                  <span className="text-xs font-semibold px-2.5 py-1 bg-surface-100 rounded-lg">{evaluation.difficulty}</span>
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest block mb-1">Estimated Accuracy</span>
-                  <span className="text-xs font-semibold px-2.5 py-1 bg-surface-100 rounded-lg">{evaluation.estimated_accuracy}%</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              {evaluation.strengths?.length > 0 && (
-                <div className="space-y-3">
-                  <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Strengths</span>
-                  <ul className="space-y-2">
-                    {evaluation.strengths.map((s, i) => (
-                      <li key={i} className="flex gap-2 text-xs text-surface-700">
-                        <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" /> {s}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {evaluation.missing_points?.length > 0 && (
-                <div className="space-y-3">
-                  <span className="text-[10px] font-bold text-amber-600 uppercase tracking-widest">Missing Points</span>
-                  <ul className="space-y-2">
-                    {evaluation.missing_points.map((m, i) => (
-                      <li key={i} className="flex gap-2 text-xs text-surface-700">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0 mt-1.5" /> {m}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-3 mb-6 p-4 bg-primary-50/50 rounded-xl border border-primary-100/50">
-              <span className="text-[10px] font-bold text-primary-600 uppercase tracking-widest">AI Feedback</span>
-              <p className="text-sm text-surface-700 leading-relaxed">{evaluation.feedback}</p>
-            </div>
-
-            <div className="space-y-3 p-4 bg-surface-50 rounded-xl border border-surface-200">
-              <span className="text-[10px] font-bold text-surface-500 uppercase tracking-widest flex items-center gap-1.5">
-                <Lightbulb className="w-3.5 h-3.5 text-amber-500" /> Suggested Ideal Answer
-              </span>
-              <p className="text-sm text-surface-700 leading-relaxed italic">"{evaluation.suggested_answer}"</p>
+            <div className="w-full text-left bg-surface-50 p-6 rounded-2xl border border-surface-100">
+              <ProgressSteps />
             </div>
           </motion.div>
+        )}
 
-          <button onClick={handleNext} className="w-full btn-primary justify-center py-4 rounded-xl font-bold tracking-wide">
-            {currentIdx + 1 >= totalQuestions ? (
-              <><Trophy className="w-4 h-4" /> View Final Interview Report</>
-            ) : (
-              <>Next Question <ChevronRight className="w-4 h-4" /></>
-            )}
-          </button>
-        </div>
-      )}
+        {/* ── ERROR PHASE ── */}
+        {phase === PHASES.ERROR && (
+          <motion.div
+            key="error"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="card max-w-md mx-auto flex flex-col items-center py-12 px-8 space-y-8 text-center border-red-200 bg-red-50/30"
+          >
+            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center">
+              <AlertTriangle className="w-10 h-10 text-red-500" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-xl font-bold text-surface-900 dark:text-white">Evaluation Failed</h2>
+              <p className="text-sm text-surface-500">Unable to evaluate your answer. The Gemini API might be busy.</p>
+              {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
+            </div>
+            
+            <div className="flex flex-col w-full gap-3">
+              <button onClick={handleEvaluate} className="btn-primary w-full justify-center">
+                <RotateCcw className="w-4 h-4" /> Retry Evaluation
+              </button>
+              <button onClick={handleNext} className="btn-secondary w-full justify-center">
+                <Play className="w-4 h-4" /> Skip Question
+              </button>
+              <button onClick={reset} className="btn-secondary w-full justify-center text-red-600 border-red-200 hover:bg-red-50">
+                Cancel Interview
+              </button>
+            </div>
+          </motion.div>
+        )}
 
-      {phase === PHASES.COMPLETE && (
-        loading ? (
-          <LoadingSpinner message="Generating Interview Report..." />
-        ) : finalResult && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
-            <div className="card p-8 bg-gradient-to-tr from-surface-900 to-surface-800 text-white rounded-3xl shadow-xl text-center space-y-6 border-0 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary-500/10 to-transparent pointer-events-none" />
-              <div className="flex flex-col items-center justify-center space-y-2 relative z-10">
-                <span className="px-3 py-1 bg-white/10 rounded-full text-xs font-semibold uppercase tracking-widest mb-2">Interview Complete</span>
-                <Trophy className="w-12 h-12 text-amber-300 fill-amber-300" />
-                <h2 className="text-2xl font-black">Overall Score</h2>
-                
-                <div className="flex items-center justify-center gap-8 mt-4">
-                  <div className="flex flex-col items-center">
-                    <ScoreRing score={finalResult.overall_score} />
-                  </div>
-                  <div className="flex flex-col items-center justify-center space-y-2">
-                    <span className="text-[10px] font-bold text-white/50 uppercase tracking-widest">Performance Badge</span>
-                    <div className="text-4xl">{getBadgeIcon(finalResult.overall_score >= 8 ? 'Excellent' : finalResult.overall_score >= 6 ? 'Good' : 'Needs Improvement')}</div>
-                    <span className="text-sm font-bold text-white">{finalResult.overall_score >= 8 ? 'Excellent' : finalResult.overall_score >= 6 ? 'Good' : 'Needs Improvement'}</span>
-                  </div>
-                </div>
+        {/* ── FEEDBACK PHASE ── */}
+        {phase === PHASES.FEEDBACK && evaluation && (
+          <motion.div
+            key="feedback"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            className="space-y-6 max-w-3xl mx-auto"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest min-w-[90px]">
+                Question {currentIdx + 1} of {totalQuestions}
+              </span>
+              <div className="flex-grow h-1.5 bg-surface-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary-500 rounded-full transition-all"
+                  style={{ width: `${((currentIdx + 1) / totalQuestions) * 100}%` }}
+                />
               </div>
             </div>
 
-            {finalSummaryData && (
-              <div className="card border-primary-200/50 shadow-md">
-                <div className="flex items-center gap-2 mb-6 border-b border-surface-100 pb-4">
-                  <Target className="w-5 h-5 text-primary-500" />
-                  <h3 className="font-bold text-surface-900 dark:text-white">Overall Performance Summary</h3>
+            <div className="card border-primary-200/50 shadow-md p-8">
+              <div className="flex items-center gap-2 mb-8 border-b border-surface-100 pb-4">
+                <BrainCircuit className="w-5 h-5 text-primary-500" />
+                <h3 className="font-bold text-surface-900 dark:text-white">🤖 AI Evaluation</h3>
+              </div>
+              
+              <div className="flex flex-col md:flex-row items-center gap-8 mb-8 pb-8 border-b border-surface-100">
+                <div className="flex flex-col items-center justify-center space-y-3">
+                  <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest">Question Score</span>
+                  <ScoreRing score={evaluation.score} />
                 </div>
-                
-                <p className="text-sm text-surface-700 leading-relaxed mb-8">
-                  {finalSummaryData.overall_performance_summary}
-                </p>
-
-                <div className="grid grid-cols-2 gap-4 mb-8">
-                  <div className="p-4 bg-surface-50 rounded-xl border border-surface-100">
-                    <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest block mb-1">Knowledge Level</span>
-                    <span className="font-semibold text-surface-800">{finalSummaryData.knowledge_level}</span>
+                <div className="flex flex-col items-center justify-center space-y-2">
+                  <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest">Performance Badge</span>
+                  <div className="text-4xl mt-2">{getBadgeIcon(evaluation.performance_badge)}</div>
+                  <span className="text-sm font-bold text-surface-700">{evaluation.performance_badge}</span>
+                </div>
+                <div className="flex-grow flex flex-col justify-center space-y-4 pl-4 md:border-l border-surface-100">
+                  <div className="bg-surface-50 p-3 rounded-xl border border-surface-200 flex justify-between items-center">
+                    <span className="text-[10px] font-bold text-surface-500 uppercase tracking-widest">Question Difficulty</span>
+                    <span className="text-xs font-bold text-surface-800">{evaluation.difficulty}</span>
                   </div>
-                  <div className="p-4 bg-surface-50 rounded-xl border border-surface-100">
-                    <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest block mb-1">Confidence Level</span>
-                    <span className="font-semibold text-surface-800">{finalSummaryData.confidence_level}</span>
+                  <div className="bg-surface-50 p-3 rounded-xl border border-surface-200 flex justify-between items-center">
+                    <span className="text-[10px] font-bold text-surface-500 uppercase tracking-widest">Estimated Accuracy</span>
+                    <span className="text-xs font-bold text-surface-800">{evaluation.estimated_accuracy}%</span>
                   </div>
                 </div>
+              </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                  {finalResult.strengths?.length > 0 && (
-                    <div className="space-y-3">
-                      <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Key Strengths</span>
-                      <ul className="space-y-2">
-                        {finalResult.strengths.map((s, i) => (
-                          <li key={i} className="flex gap-2 text-xs text-surface-700">
-                            <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" /> {s}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {finalResult.weaknesses?.length > 0 && (
-                    <div className="space-y-3">
-                      <span className="text-[10px] font-bold text-amber-600 uppercase tracking-widest">Areas for Improvement</span>
-                      <ul className="space-y-2">
-                        {finalResult.weaknesses.map((w, i) => (
-                          <li key={i} className="flex gap-2 text-xs text-surface-700">
-                            <ShieldAlert className="w-4 h-4 text-amber-500 flex-shrink-0" /> {w}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-
-                {finalSummaryData.recommended_learning_topics?.length > 0 && (
-                  <div className="p-5 bg-primary-50 rounded-xl border border-primary-100">
-                    <span className="text-[10px] font-bold text-primary-700 uppercase tracking-widest block mb-3">Recommended Learning Topics</span>
-                    <div className="flex flex-wrap gap-2">
-                      {finalSummaryData.recommended_learning_topics.map((t, i) => (
-                        <span key={i} className="px-3 py-1.5 bg-white text-primary-700 text-xs font-semibold rounded-lg shadow-sm border border-primary-100">
-                          {t}
-                        </span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                {evaluation.strengths?.length > 0 && (
+                  <div className="space-y-4">
+                    <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-widest flex items-center gap-1">
+                      <CheckCircle className="w-3.5 h-3.5" /> ✔ Strengths
+                    </span>
+                    <ul className="space-y-2.5">
+                      {evaluation.strengths.map((s, i) => (
+                        <li key={i} className="flex gap-2 text-sm text-surface-700 leading-relaxed">
+                          <span className="text-emerald-500 flex-shrink-0">•</span> {s}
+                        </li>
                       ))}
-                    </div>
+                    </ul>
+                  </div>
+                )}
+                {evaluation.missing_points?.length > 0 && (
+                  <div className="space-y-4">
+                    <span className="text-[11px] font-bold text-red-600 uppercase tracking-widest flex items-center gap-1">
+                      <ShieldAlert className="w-3.5 h-3.5" /> ⚠ Areas for Improvement
+                    </span>
+                    <ul className="space-y-2.5">
+                      {evaluation.missing_points.map((m, i) => (
+                        <li key={i} className="flex gap-2 text-sm text-surface-700 leading-relaxed">
+                          <span className="text-red-500 flex-shrink-0">•</span> {m}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 )}
               </div>
-            )}
 
-            <button onClick={reset} className="btn-secondary w-full py-4 rounded-xl font-bold justify-center shadow-sm">
-              <RotateCcw className="w-4 h-4" /> Start Another Assessment Session
+              <div className="space-y-3 mb-8 p-5 bg-primary-50/50 rounded-2xl border border-primary-100/50">
+                <span className="text-[11px] font-bold text-primary-700 uppercase tracking-widest flex items-center gap-1.5">
+                  💬 AI Feedback
+                </span>
+                <p className="text-sm text-surface-700 leading-relaxed">{evaluation.feedback}</p>
+              </div>
+
+              <div className="space-y-3 p-5 bg-amber-50/30 rounded-2xl border border-amber-200/50">
+                <span className="text-[11px] font-bold text-amber-700 uppercase tracking-widest flex items-center gap-1.5">
+                  💡 Suggested Ideal Answer
+                </span>
+                <p className="text-sm text-surface-700 leading-relaxed italic">"{evaluation.suggested_answer}"</p>
+              </div>
+            </div>
+
+            <button onClick={handleNext} className="w-full btn-primary justify-center py-4 rounded-xl font-bold tracking-wide shadow-md">
+              {currentIdx + 1 >= totalQuestions ? (
+                <><Trophy className="w-4 h-4" /> View Final Interview Report</>
+              ) : (
+                <>Next Question <ChevronRight className="w-4 h-4" /></>
+              )}
             </button>
           </motion.div>
-        )
-      )}
+        )}
+
+        {/* ── COMPLETE PHASE ── */}
+        {phase === PHASES.COMPLETE && (
+          loading ? (
+            <motion.div key="complete-loading" className="flex justify-center py-20">
+              <div className="flex flex-col items-center gap-4">
+                <div className="w-12 h-12 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+                <p className="text-sm font-bold text-surface-500">Generating Interview Report...</p>
+              </div>
+            </motion.div>
+          ) : finalResult && (
+            <motion.div
+              key="complete-report"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-8 max-w-4xl mx-auto"
+            >
+              <div className="card p-10 bg-gradient-to-tr from-surface-900 to-surface-800 text-white rounded-3xl shadow-2xl text-center space-y-8 border-0 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary-500/20 to-transparent pointer-events-none" />
+                <div className="relative z-10 flex flex-col items-center justify-center space-y-4">
+                  <span className="px-4 py-1.5 bg-white/10 rounded-full text-xs font-bold uppercase tracking-widest mb-2 border border-white/10">
+                    🎉 Interview Complete
+                  </span>
+                  
+                  <div className="flex flex-col md:flex-row items-center justify-center gap-12 mt-6">
+                    <div className="flex flex-col items-center space-y-4">
+                      <span className="text-[10px] font-bold text-white/50 uppercase tracking-widest">Overall Interview Score</span>
+                      <ScoreRing score={finalResult.overall_score} />
+                      <span className="text-sm font-bold text-white/80">{Math.round((finalResult.overall_score / 10) * 100)}%</span>
+                    </div>
+                    
+                    <div className="flex flex-col items-center justify-center space-y-3">
+                      <span className="text-[10px] font-bold text-white/50 uppercase tracking-widest">Performance Badge</span>
+                      <div className="text-5xl drop-shadow-lg">{getBadgeIcon(finalResult.overall_score >= 8 ? 'Excellent' : finalResult.overall_score >= 6 ? 'Good' : 'Needs Improvement')}</div>
+                      <span className="text-lg font-bold text-white">{finalResult.overall_score >= 8 ? 'Excellent' : finalResult.overall_score >= 6 ? 'Good' : 'Needs Improvement'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {finalSummaryData && (
+                <div className="card shadow-lg border-surface-200">
+                  <div className="flex items-center gap-2 mb-6 border-b border-surface-100 pb-5">
+                    <Target className="w-5 h-5 text-primary-500" />
+                    <h3 className="font-bold text-lg text-surface-900 dark:text-white">AI Summary</h3>
+                  </div>
+                  
+                  <div className="mb-8">
+                    <span className="text-[11px] font-bold text-surface-400 uppercase tracking-widest block mb-2">Overall Performance</span>
+                    <p className="text-sm text-surface-700 leading-relaxed bg-surface-50 p-5 rounded-2xl border border-surface-100">
+                      {finalSummaryData.overall_performance_summary}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <div className="p-4 bg-surface-50 rounded-xl border border-surface-100 flex flex-col items-center text-center">
+                      <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest mb-2">Knowledge Rating</span>
+                      <ScoreRing score={finalSummaryData.knowledge_rating} max={10} />
+                    </div>
+                    <div className="p-4 bg-surface-50 rounded-xl border border-surface-100 flex flex-col items-center text-center">
+                      <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest mb-2">Communication</span>
+                      <ScoreRing score={finalSummaryData.communication_rating} max={10} />
+                    </div>
+                    <div className="p-4 bg-surface-50 rounded-xl border border-surface-100 flex flex-col items-center text-center">
+                      <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest mb-2">Reasoning</span>
+                      <ScoreRing score={finalSummaryData.reasoning_rating} max={10} />
+                    </div>
+                    <div className="p-4 bg-surface-50 rounded-xl border border-surface-100 flex flex-col items-center text-center">
+                      <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest mb-2">Confidence</span>
+                      <ScoreRing score={finalSummaryData.confidence_rating} max={10} />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    {finalResult.strengths?.length > 0 && (
+                      <div className="space-y-4">
+                        <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-widest flex items-center gap-1">
+                          <CheckCircle className="w-3.5 h-3.5" /> Strengths
+                        </span>
+                        <ul className="space-y-2.5">
+                          {finalResult.strengths.map((s, i) => (
+                            <li key={i} className="flex gap-2 text-sm text-surface-700 leading-relaxed">
+                              <span className="text-emerald-500 flex-shrink-0">•</span> {s}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {finalResult.weaknesses?.length > 0 && (
+                      <div className="space-y-4">
+                        <span className="text-[11px] font-bold text-red-600 uppercase tracking-widest flex items-center gap-1">
+                          <ShieldAlert className="w-3.5 h-3.5" /> Weaknesses
+                        </span>
+                        <ul className="space-y-2.5">
+                          {finalResult.weaknesses.map((w, i) => (
+                            <li key={i} className="flex gap-2 text-sm text-surface-700 leading-relaxed">
+                              <span className="text-red-500 flex-shrink-0">•</span> {w}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+
+                  {finalSummaryData.recommended_learning_topics?.length > 0 && (
+                    <div className="p-6 bg-primary-50 rounded-2xl border border-primary-100">
+                      <span className="text-[11px] font-bold text-primary-700 uppercase tracking-widest block mb-4 flex items-center gap-1.5">
+                        <Lightbulb className="w-4 h-4 text-primary-500" /> Recommended Topics
+                      </span>
+                      <div className="flex flex-wrap gap-2.5">
+                        {finalSummaryData.recommended_learning_topics.map((t, i) => (
+                          <span key={i} className="px-3.5 py-1.5 bg-white text-primary-800 text-sm font-semibold rounded-xl shadow-sm border border-primary-100">
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <button onClick={reset} className="btn-secondary w-full py-4 rounded-xl font-bold justify-center shadow-sm">
+                <RotateCcw className="w-4 h-4" /> Start Another Assessment Session
+              </button>
+            </motion.div>
+          )
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

@@ -44,6 +44,12 @@ class EvaluateRequest(BaseModel):
 class EvaluateResponse(BaseModel):
     score: int = Field(ge=1, le=10, description="Answer score 1–10")
     feedback: str
+    performance_badge: str
+    strengths: List[str]
+    missing_points: List[str]
+    suggested_answer: str
+    difficulty: str
+    estimated_accuracy: int
 
 
 class AnswerRecord(BaseModel):
@@ -51,6 +57,12 @@ class AnswerRecord(BaseModel):
     answer: str
     score: int
     feedback: str
+    performance_badge: str
+    strengths: List[str]
+    missing_points: List[str]
+    suggested_answer: str
+    difficulty: str
+    estimated_accuracy: int
 
 
 class SaveInterviewRequest(BaseModel):

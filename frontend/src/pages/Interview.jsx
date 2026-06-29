@@ -2,8 +2,9 @@ import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Mic, ChevronRight, Trophy, RotateCcw, Star,
-  Volume2, ShieldAlert, Sparkles, CheckCircle, BrainCircuit, Target, Lightbulb, AlertTriangle, Play
+  Volume2, VolumeX, ShieldAlert, Sparkles, CheckCircle, BrainCircuit, Target, Lightbulb, AlertTriangle, Play, Download
 } from 'lucide-react';
+import html2pdf from 'html2pdf.js';
 import MicButton from '../components/MicButton';
 import ErrorAlert from '../components/ErrorAlert';
 import { getInterviewQuestions, evaluateAnswer, saveInterviewResult, getHistory } from '../services/api';
@@ -113,7 +114,7 @@ function ProgressSteps() {
 // ── Main Page Component ───────────────────────────────────────────────────
 
 export default function Interview() {
-  const { currentReport } = useApp();
+  const { currentReport, showToast } = useApp();
   const [latestReport, setLatestReport] = useState(null);
   const [standard, setStandard]     = useState('General Safety');
   const [phase, setPhase]           = useState(PHASES.SETUP);
@@ -125,6 +126,9 @@ export default function Interview() {
   const [finalResult, setFinalResult] = useState(null);
   const [loading, setLoading]       = useState(false);
   const [error, setError]           = useState(null);
+
+  // Text to Speech State
+  const [isVoiceEnabled, setIsVoiceEnabled] = useState(true);
 
   const currentQuestion = questions[currentIdx];
   const totalQuestions  = 5;
@@ -140,6 +144,52 @@ export default function Interview() {
       }).catch(err => console.error("Could not fetch latest report", err));
     }
   }, [currentReport]);
+
+  // TTS Helper Functions
+  const stopSpeaking = useCallback(() => {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+  }, []);
+
+  const speakText = useCallback((text) => {
+    if (!isVoiceEnabled || !window.speechSynthesis || !text) return;
+    stopSpeaking();
+    
+    // Slight delay so the UI renders before audio begins
+    setTimeout(() => {
+      const utterance = new SpeechSynthesisUtterance(text);
+      // Optional: you can pick a specific voice if available.
+      // utterance.rate = 1.0;
+      window.speechSynthesis.speak(utterance);
+    }, 100);
+  }, [isVoiceEnabled, stopSpeaking]);
+
+  // Clean up speech when component unmounts
+  useEffect(() => {
+    return () => stopSpeaking();
+  }, [stopSpeaking]);
+
+  // Speak Question
+  useEffect(() => {
+    if (phase === PHASES.QUESTION && currentQuestion) {
+      speakText(currentQuestion);
+    }
+  }, [phase, currentQuestion, speakText]);
+
+  // Speak Evaluation Feedback
+  useEffect(() => {
+    if (phase === PHASES.FEEDBACK && evaluation) {
+      speakText(`You scored a ${evaluation.score} out of 10. ${evaluation.feedback}`);
+    }
+  }, [phase, evaluation, speakText]);
+
+  const toggleVoice = () => {
+    setIsVoiceEnabled(prev => {
+      if (prev) stopSpeaking(); // stop currently playing audio if turned off
+      return !prev;
+    });
+  };
 
   const startInterview = async () => {
     setLoading(true);
@@ -164,8 +214,9 @@ export default function Interview() {
   };
 
   const handleTranscript = useCallback((text) => {
+    stopSpeaking(); // Interrupt AI if user starts speaking
     setTranscript(text);
-  }, []);
+  }, [stopSpeaking]);
 
   const handleMicError = useCallback((msg) => {
     setError(msg);
@@ -176,6 +227,7 @@ export default function Interview() {
       setError('Please provide or speak your answer before submitting.');
       return;
     }
+    stopSpeaking();
     setPhase(PHASES.EVALUATING);
     setError(null);
     try {
@@ -194,6 +246,7 @@ export default function Interview() {
   };
 
   const handleNext = async () => {
+    stopSpeaking();
     setTranscript('');
     setEvaluation(null);
     setError(null);
@@ -222,6 +275,7 @@ export default function Interview() {
       });
       setFinalResult(saved);
       saveToLocal(saved);
+      speakText("Interview complete. Generating your final report.");
     } catch (err) {
       const avgScore = answers.reduce((s, a) => s + a.score, 0) / (answers.length || 1);
       const fallbackResult = {
@@ -261,6 +315,7 @@ export default function Interview() {
   };
 
   const reset = () => {
+    stopSpeaking();
     setPhase(PHASES.SETUP);
     setQuestions([]);
     setCurrentIdx(0);
@@ -286,14 +341,47 @@ export default function Interview() {
     }
   };
 
+  // PDF Download Logic
+  const handleDownloadPDF = () => {
+    if (!finalResult) return;
+    const element = document.getElementById('interview-report-content');
+    
+    // Add a temporary wrapper class for PDF generation to ensure Dark Mode styling captures well
+    element.classList.add('pdf-export-mode');
+
+    const opt = {
+      margin:       10,
+      filename:     `VisionAI_Interview_${new Date().toISOString().split('T')[0]}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true, logging: false },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(element).save().then(() => {
+       element.classList.remove('pdf-export-mode');
+       if (showToast) showToast('Report downloaded successfully!', 'success');
+    });
+  };
+
   const finalSummaryData = parseFinalSuggestions();
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="max-w-4xl mx-auto px-4 py-16 space-y-8"
+      className="max-w-4xl mx-auto px-4 py-16 space-y-8 relative"
     >
+      {/* Voice Toggle Button */}
+      <div className="absolute top-4 right-4 z-10">
+        <button
+          onClick={toggleVoice}
+          className="p-3 bg-surface-50 border border-surface-200 rounded-full shadow-sm text-surface-600 hover:text-primary-600 hover:bg-primary-50 transition-colors"
+          title={isVoiceEnabled ? "Mute AI Voice" : "Enable AI Voice"}
+        >
+          {isVoiceEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+        </button>
+      </div>
+
       <div className="text-center space-y-3">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary-50 text-primary-700 text-xs font-semibold rounded-full border border-primary-100 shadow-sm">
           <Mic className="w-3.5 h-3.5" />
@@ -367,7 +455,16 @@ export default function Interview() {
               </div>
             </div>
             <div className="card p-8 bg-gradient-to-tr from-surface-50 to-white border border-surface-200 rounded-3xl shadow-sm space-y-3">
-              <span className="text-[10px] font-bold text-primary-500 uppercase tracking-widest">Question prompt</span>
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-bold text-primary-500 uppercase tracking-widest">Question prompt</span>
+                <button 
+                  onClick={() => speakText(currentQuestion)}
+                  className="text-primary-500 hover:text-primary-700 transition-colors p-1"
+                  title="Replay Audio"
+                >
+                  <Volume2 className="w-4 h-4" />
+                </button>
+              </div>
               <h2 className="text-xl font-bold text-surface-900 dark:text-white leading-snug">{currentQuestion}</h2>
             </div>
 
@@ -487,9 +584,18 @@ export default function Interview() {
             </div>
 
             <div className="card border-primary-200/50 shadow-md p-8">
-              <div className="flex items-center gap-2 mb-8 border-b border-surface-100 pb-4">
-                <BrainCircuit className="w-5 h-5 text-primary-500" />
-                <h3 className="font-bold text-surface-900 dark:text-white">🤖 AI Evaluation</h3>
+              <div className="flex items-center justify-between mb-8 border-b border-surface-100 pb-4">
+                <div className="flex items-center gap-2">
+                  <BrainCircuit className="w-5 h-5 text-primary-500" />
+                  <h3 className="font-bold text-surface-900 dark:text-white">🤖 AI Evaluation</h3>
+                </div>
+                <button 
+                  onClick={() => speakText(`You scored a ${evaluation.score} out of 10. ${evaluation.feedback}`)}
+                  className="text-primary-500 hover:text-primary-700 transition-colors p-1"
+                  title="Replay Audio"
+                >
+                  <Volume2 className="w-4 h-4" />
+                </button>
               </div>
               
               <div className="flex flex-col md:flex-row items-center gap-8 mb-8 pb-8 border-b border-surface-100">
@@ -586,113 +692,123 @@ export default function Interview() {
               animate={{ opacity: 1, y: 0 }}
               className="space-y-8 max-w-4xl mx-auto"
             >
-              <div className="card p-10 bg-gradient-to-tr from-surface-900 to-surface-800 text-white rounded-3xl shadow-2xl text-center space-y-8 border-0 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary-500/20 to-transparent pointer-events-none" />
-                <div className="relative z-10 flex flex-col items-center justify-center space-y-4">
-                  <span className="px-4 py-1.5 bg-white/10 rounded-full text-xs font-bold uppercase tracking-widest mb-2 border border-white/10">
-                    🎉 Interview Complete
-                  </span>
-                  
-                  <div className="flex flex-col md:flex-row items-center justify-center gap-12 mt-6">
-                    <div className="flex flex-col items-center space-y-4">
-                      <span className="text-[10px] font-bold text-white/50 uppercase tracking-widest">Overall Interview Score</span>
-                      <ScoreRing score={finalResult.overall_score} />
-                      <span className="text-sm font-bold text-white/80">{Math.round((finalResult.overall_score / 10) * 100)}%</span>
+              {/* PDF EXPORT CONTENT WRAPPER */}
+              <div id="interview-report-content" className="space-y-8 bg-transparent">
+                <div className="card p-10 bg-gradient-to-tr from-surface-900 to-surface-800 text-white rounded-3xl shadow-2xl text-center space-y-8 border-0 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary-500/20 to-transparent pointer-events-none" />
+                  <div className="relative z-10 flex flex-col items-center justify-center space-y-4">
+                    <span className="px-4 py-1.5 bg-white/10 rounded-full text-xs font-bold uppercase tracking-widest mb-2 border border-white/10">
+                      🎉 Interview Complete
+                    </span>
+                    <h2 className="text-2xl font-bold">{standard} Assessment</h2>
+                    
+                    <div className="flex flex-col md:flex-row items-center justify-center gap-12 mt-6">
+                      <div className="flex flex-col items-center space-y-4">
+                        <span className="text-[10px] font-bold text-white/50 uppercase tracking-widest">Overall Score</span>
+                        <ScoreRing score={finalResult.overall_score} />
+                        <span className="text-sm font-bold text-white/80">{Math.round((finalResult.overall_score / 10) * 100)}%</span>
+                      </div>
+                      
+                      <div className="flex flex-col items-center justify-center space-y-3">
+                        <span className="text-[10px] font-bold text-white/50 uppercase tracking-widest">Performance Badge</span>
+                        <div className="text-5xl drop-shadow-lg">{getBadgeIcon(finalResult.overall_score >= 8 ? 'Excellent' : finalResult.overall_score >= 6 ? 'Good' : 'Needs Improvement')}</div>
+                        <span className="text-lg font-bold text-white">{finalResult.overall_score >= 8 ? 'Excellent' : finalResult.overall_score >= 6 ? 'Good' : 'Needs Improvement'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {finalSummaryData && (
+                  <div className="card shadow-lg border-surface-200">
+                    <div className="flex items-center gap-2 mb-6 border-b border-surface-100 pb-5">
+                      <Target className="w-5 h-5 text-primary-500" />
+                      <h3 className="font-bold text-lg text-surface-900 dark:text-white">AI Summary</h3>
                     </div>
                     
-                    <div className="flex flex-col items-center justify-center space-y-3">
-                      <span className="text-[10px] font-bold text-white/50 uppercase tracking-widest">Performance Badge</span>
-                      <div className="text-5xl drop-shadow-lg">{getBadgeIcon(finalResult.overall_score >= 8 ? 'Excellent' : finalResult.overall_score >= 6 ? 'Good' : 'Needs Improvement')}</div>
-                      <span className="text-lg font-bold text-white">{finalResult.overall_score >= 8 ? 'Excellent' : finalResult.overall_score >= 6 ? 'Good' : 'Needs Improvement'}</span>
+                    <div className="mb-8">
+                      <span className="text-[11px] font-bold text-surface-400 uppercase tracking-widest block mb-2">Overall Performance</span>
+                      <p className="text-sm text-surface-700 leading-relaxed bg-surface-50 p-5 rounded-2xl border border-surface-100">
+                        {finalSummaryData.overall_performance_summary}
+                      </p>
                     </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                      <div className="p-4 bg-surface-50 rounded-xl border border-surface-100 flex flex-col items-center text-center">
+                        <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest mb-2">Knowledge Rating</span>
+                        <ScoreRing score={finalSummaryData.knowledge_rating} max={10} />
+                      </div>
+                      <div className="p-4 bg-surface-50 rounded-xl border border-surface-100 flex flex-col items-center text-center">
+                        <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest mb-2">Communication</span>
+                        <ScoreRing score={finalSummaryData.communication_rating} max={10} />
+                      </div>
+                      <div className="p-4 bg-surface-50 rounded-xl border border-surface-100 flex flex-col items-center text-center">
+                        <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest mb-2">Reasoning</span>
+                        <ScoreRing score={finalSummaryData.reasoning_rating} max={10} />
+                      </div>
+                      <div className="p-4 bg-surface-50 rounded-xl border border-surface-100 flex flex-col items-center text-center">
+                        <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest mb-2">Confidence</span>
+                        <ScoreRing score={finalSummaryData.confidence_rating} max={10} />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                      {finalResult.strengths?.length > 0 && (
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-widest flex items-center gap-1">
+                            <CheckCircle className="w-3.5 h-3.5" /> Strengths
+                          </span>
+                          <ul className="space-y-2.5">
+                            {finalResult.strengths.map((s, i) => (
+                              <li key={i} className="flex gap-2 text-sm text-surface-700 leading-relaxed">
+                                <span className="text-emerald-500 flex-shrink-0">•</span> {s}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {finalResult.weaknesses?.length > 0 && (
+                        <div className="space-y-4">
+                          <span className="text-[11px] font-bold text-red-600 uppercase tracking-widest flex items-center gap-1">
+                            <ShieldAlert className="w-3.5 h-3.5" /> Weaknesses
+                          </span>
+                          <ul className="space-y-2.5">
+                            {finalResult.weaknesses.map((w, i) => (
+                              <li key={i} className="flex gap-2 text-sm text-surface-700 leading-relaxed">
+                                <span className="text-red-500 flex-shrink-0">•</span> {w}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+
+                    {finalSummaryData.recommended_learning_topics?.length > 0 && (
+                      <div className="p-6 bg-primary-50 rounded-2xl border border-primary-100">
+                        <span className="text-[11px] font-bold text-primary-700 uppercase tracking-widest block mb-4 flex items-center gap-1.5">
+                          <Lightbulb className="w-4 h-4 text-primary-500" /> Recommended Topics
+                        </span>
+                        <div className="flex flex-wrap gap-2.5">
+                          {finalSummaryData.recommended_learning_topics.map((t, i) => (
+                            <span key={i} className="px-3.5 py-1.5 bg-white text-primary-800 text-sm font-semibold rounded-xl shadow-sm border border-primary-100">
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
+                )}
               </div>
 
-              {finalSummaryData && (
-                <div className="card shadow-lg border-surface-200">
-                  <div className="flex items-center gap-2 mb-6 border-b border-surface-100 pb-5">
-                    <Target className="w-5 h-5 text-primary-500" />
-                    <h3 className="font-bold text-lg text-surface-900 dark:text-white">AI Summary</h3>
-                  </div>
-                  
-                  <div className="mb-8">
-                    <span className="text-[11px] font-bold text-surface-400 uppercase tracking-widest block mb-2">Overall Performance</span>
-                    <p className="text-sm text-surface-700 leading-relaxed bg-surface-50 p-5 rounded-2xl border border-surface-100">
-                      {finalSummaryData.overall_performance_summary}
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                    <div className="p-4 bg-surface-50 rounded-xl border border-surface-100 flex flex-col items-center text-center">
-                      <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest mb-2">Knowledge Rating</span>
-                      <ScoreRing score={finalSummaryData.knowledge_rating} max={10} />
-                    </div>
-                    <div className="p-4 bg-surface-50 rounded-xl border border-surface-100 flex flex-col items-center text-center">
-                      <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest mb-2">Communication</span>
-                      <ScoreRing score={finalSummaryData.communication_rating} max={10} />
-                    </div>
-                    <div className="p-4 bg-surface-50 rounded-xl border border-surface-100 flex flex-col items-center text-center">
-                      <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest mb-2">Reasoning</span>
-                      <ScoreRing score={finalSummaryData.reasoning_rating} max={10} />
-                    </div>
-                    <div className="p-4 bg-surface-50 rounded-xl border border-surface-100 flex flex-col items-center text-center">
-                      <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest mb-2">Confidence</span>
-                      <ScoreRing score={finalSummaryData.confidence_rating} max={10} />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                    {finalResult.strengths?.length > 0 && (
-                      <div className="space-y-4">
-                        <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-widest flex items-center gap-1">
-                          <CheckCircle className="w-3.5 h-3.5" /> Strengths
-                        </span>
-                        <ul className="space-y-2.5">
-                          {finalResult.strengths.map((s, i) => (
-                            <li key={i} className="flex gap-2 text-sm text-surface-700 leading-relaxed">
-                              <span className="text-emerald-500 flex-shrink-0">•</span> {s}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    {finalResult.weaknesses?.length > 0 && (
-                      <div className="space-y-4">
-                        <span className="text-[11px] font-bold text-red-600 uppercase tracking-widest flex items-center gap-1">
-                          <ShieldAlert className="w-3.5 h-3.5" /> Weaknesses
-                        </span>
-                        <ul className="space-y-2.5">
-                          {finalResult.weaknesses.map((w, i) => (
-                            <li key={i} className="flex gap-2 text-sm text-surface-700 leading-relaxed">
-                              <span className="text-red-500 flex-shrink-0">•</span> {w}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-
-                  {finalSummaryData.recommended_learning_topics?.length > 0 && (
-                    <div className="p-6 bg-primary-50 rounded-2xl border border-primary-100">
-                      <span className="text-[11px] font-bold text-primary-700 uppercase tracking-widest block mb-4 flex items-center gap-1.5">
-                        <Lightbulb className="w-4 h-4 text-primary-500" /> Recommended Topics
-                      </span>
-                      <div className="flex flex-wrap gap-2.5">
-                        {finalSummaryData.recommended_learning_topics.map((t, i) => (
-                          <span key={i} className="px-3.5 py-1.5 bg-white text-primary-800 text-sm font-semibold rounded-xl shadow-sm border border-primary-100">
-                            {t}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <button onClick={reset} className="btn-secondary w-full py-4 rounded-xl font-bold justify-center shadow-sm">
-                <RotateCcw className="w-4 h-4" /> Start Another Assessment Session
-              </button>
+              {/* Action Buttons (Not in PDF) */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button onClick={handleDownloadPDF} className="flex-1 btn-primary py-4 rounded-xl font-bold justify-center shadow-sm">
+                  <Download className="w-4 h-4" /> Download PDF Report
+                </button>
+                <button onClick={reset} className="flex-1 btn-secondary py-4 rounded-xl font-bold justify-center shadow-sm">
+                  <RotateCcw className="w-4 h-4" /> Start Another Session
+                </button>
+              </div>
             </motion.div>
           )
         )}

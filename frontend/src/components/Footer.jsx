@@ -145,22 +145,10 @@ export default function Footer() {
           {/* BOTTOM BAR */}
           <motion.div 
             variants={itemVariants}
-            className="pt-8 mt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-semibold text-slate-500"
+            className="pt-8 mt-8 border-t border-white/10 flex justify-center items-center text-sm font-medium text-slate-400"
           >
-            <div className="flex flex-col md:flex-row gap-2 md:gap-4 items-center text-center md:text-left">
-              <span>© {currentYear} VisionAI</span>
-              <span className="hidden md:inline text-white/20">•</span>
-              <span>Built for AI Compliance Auditing</span>
-            </div>
-            
-            <div className="text-blue-400/80 tracking-wide">
-              "Powered by Gemini AI & FastAPI"
-            </div>
-
-            <div className="flex flex-col md:flex-row gap-2 md:gap-4 items-center text-center md:text-right">
-              <span>Version 1.0</span>
-              <span className="hidden md:inline text-white/20">•</span>
-              <span>Made with ❤️ using React & Python</span>
+            <div>
+              Made by Raghu ❤️
             </div>
           </motion.div>
         </motion.div>
